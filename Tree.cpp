@@ -4,9 +4,9 @@
 #define DEBUG
 
 const size_t STR_MAX_SIZE = 100;
-const char *TREE_GRAPH_VIZ   = "graphviz.gv";
-const char *INPUT_FILE_NAME  = "data.txt";
-const char *OUTPUT_FILE_NAME = "data.txt";
+const char *TREE_GRAPH_VIZ   = "/home/kostya/Differentiator/graphviz.gv";
+const char *INPUT_FILE_NAME  = "/home/kostya/Differentiator/data.txt";
+const char *OUTPUT_FILE_NAME = "/home/kostya/Differentiator/data.txt";
 
 struct NodeType
 {
@@ -106,7 +106,7 @@ void TreeDump(Tree_t *tree)
 
     fclose(graphViz);
 
-    system("dot -Tpng /home/kostya/Akinator/graphviz.gv -o /home/kostya/Akinator/graphviz.png");
+    system("dot -Tpng /home/kostya/Differentiator/graphviz.gv -o /home/kostya/Differentiator/graphviz.png");
 }
 
 TreeErrorCode TreeCtor(Tree_t *tree)
