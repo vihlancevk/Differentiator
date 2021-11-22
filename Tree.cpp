@@ -76,11 +76,9 @@ static void TreeVisitPrintArrowInFile(const Node_t *node, FILE *foutput)
     assert(node    != nullptr);
     assert(foutput != nullptr);
 
-    if (node->left != nullptr && node->right != nullptr)
-    {
-        fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->left->num);
-        fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->right->num);
-    }
+    if (node->left  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->left->num);
+
+    if (node->right != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->right->num);
 
     if (node->left  != nullptr) TreeVisitPrintArrowInFile(node->left, foutput);
     if (node->right != nullptr) TreeVisitPrintArrowInFile(node->right, foutput);
@@ -298,6 +296,8 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
     assert(str       != nullptr);
     assert(treeError != nullptr);
 
+    char mathOperation[3] = {};
+
     if (*str == '(' && *(str + 1) == '(')
     {
         Node_t *newNode = TreeInsert(tree, node, nullptr, child, treeError);
@@ -314,13 +314,31 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
     else
     {
         str = str + 1;
-        char *endStr = StrBufferFindEndStr(str);
-        *endStr = '\0';
-        Node_t *newNode = TreeInsert(tree, node, str, child, treeError);
+        Node_t *newNode = TreeInsert(tree, node, nullptr, child, treeError);
+        if (strncmp(str, "sin", 3) == 0 || strncmp(str, "cos", 3) == 0)
+        {
+            strncpy(mathOperation, str, 3);
+            strcpy(newNode->elem, mathOperation);
+            str = str + 3;
+            str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
+        }
+        else if (strncmp(str, "ln", 2) == 0)
+        {
+            strncpy(mathOperation, str, 2);
+            strcpy(newNode->elem, mathOperation);
+            str = str + 2;
+            str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
+        }
+        else
+        {
+            char *endStr = StrBufferFindEndStr(str);
+            *endStr = '\0';
+            strcpy(newNode->elem, str);
+            str = endStr + 1;
+        }
 
         newNode->elemType = DefineNodeElemType(newNode);
 
-        str = endStr + 1;
         while (*str == ')')
         {
             str = str + 1;
