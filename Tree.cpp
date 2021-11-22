@@ -369,24 +369,30 @@ TreeErrorCode TreeBuild(Tree_t *tree)
     return treeError;
 }
 
-/*static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
+static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
 {
     assert(node    != nullptr);
     assert(foutput != nullptr);
 
-    if (node->left != nullptr)
+    fprintf(foutput, "(");
+
+    if (node->elemType == CONST || node->elemType == VARIABLE)
     {
-        fprintf(foutput, "{ %d%s ? ", (int)child, node->elem);
-
-        if (node->left  != nullptr) NodeSaveInFile(node->left, foutput, LEFT_CHILD);
-        if (node->right != nullptr) NodeSaveInFile(node->right, foutput, RIGHT_CHILD);
-
-        fprintf(foutput, "} ");
+        fprintf(foutput, "%s", node->elem);
+    }
+    else if (node->elemType == SIN || node->elemType == COS || node->elemType == LN)
+    {
+        fprintf(foutput, "%s", node->elem);
+        NodeSaveInFile(node->left, foutput, LEFT_CHILD);
     }
     else
     {
-        fprintf(foutput, "{ %d%s ! } ", (int)child, node->elem);
+        NodeSaveInFile(node->left, foutput, LEFT_CHILD);
+        fprintf(foutput, "%s", node->elem);
+        NodeSaveInFile(node->right, foutput, RIGHT_CHILD);
     }
+
+    fprintf(foutput, ")");
 }
 
 TreeErrorCode TreeSaveInFile(Tree_t *tree)
@@ -401,4 +407,4 @@ TreeErrorCode TreeSaveInFile(Tree_t *tree)
 
     fclose(data);
     return TREE_NO_ERROR;
-}*/
+}

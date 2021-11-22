@@ -6,6 +6,7 @@ int main()
 
     TreeCtor(&tree);
     TreeBuild(&tree);
+    TreeSaveInFile(&tree);
     TreeDtor(&tree);
 
     return 0;
