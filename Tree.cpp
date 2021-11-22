@@ -19,7 +19,7 @@ static void NodeTypeBuild(const Node_t *node, NodeType *nodeType)
     assert(node     != nullptr);
     assert(nodeType != nullptr);
 
-    switch ((int)node->elemType)
+    switch ((int)node->nodeType)
     {
         case ADD:
         case SUB:
@@ -67,8 +67,8 @@ static void TreeVisitPrintNodeInFile(const Node_t *node, FILE *foutput)
     sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", node->num, nodeType.shape, nodeType.color, node->elem);
     fprintf(foutput, "%s", str);
 
-    if (node->left  != nullptr) TreeVisitPrintNodeInFile(node->left, foutput);
-    if (node->right != nullptr) TreeVisitPrintNodeInFile(node->right, foutput);
+    if (node->leftChild  != nullptr) TreeVisitPrintNodeInFile(node->leftChild, foutput);
+    if (node->rightChild != nullptr) TreeVisitPrintNodeInFile(node->rightChild, foutput);
 }
 
 static void TreeVisitPrintArrowInFile(const Node_t *node, FILE *foutput)
@@ -76,12 +76,12 @@ static void TreeVisitPrintArrowInFile(const Node_t *node, FILE *foutput)
     assert(node    != nullptr);
     assert(foutput != nullptr);
 
-    if (node->left  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->left->num);
+    if (node->leftChild  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->leftChild->num);
 
-    if (node->right != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->right->num);
+    if (node->rightChild != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->rightChild->num);
 
-    if (node->left  != nullptr) TreeVisitPrintArrowInFile(node->left, foutput);
-    if (node->right != nullptr) TreeVisitPrintArrowInFile(node->right, foutput);
+    if (node->leftChild  != nullptr) TreeVisitPrintArrowInFile(node->leftChild, foutput);
+    if (node->rightChild != nullptr) TreeVisitPrintArrowInFile(node->rightChild, foutput);
 }
 
 void TreeDump(Tree_t *tree)
@@ -141,13 +141,13 @@ static void NodeDtor(Node_t *node)
 {
     assert(node != nullptr);
 
-    Node_t *left  = node->left;
-    Node_t *right = node->right;
+    Node_t *leftChild  = node->leftChild;
+    Node_t *rightChild = node->rightChild;
     free(node->elem);
     free(node);
 
-    if (left  != nullptr) NodeDtor(left);
-    if (right != nullptr) NodeDtor(right);
+    if (leftChild  != nullptr) NodeDtor(leftChild);
+    if (rightChild != nullptr) NodeDtor(rightChild);
 }
 
 TreeErrorCode TreeDtor(Tree_t *tree)
@@ -191,26 +191,28 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, char *str, const NodeChild child,
         {                                                                   \
             strcpy(node->branch->elem, str);                                \
         }                                                                   \
+        node->branch->parent = node;                                        \
         newNode = node->branch;                                             \
         } while(0)
 
     if (child == LEFT_CHILD)
     {
-        TREE_INSERT_(left);
+        TREE_INSERT_(leftChild);
     }
     else
     {
-        TREE_INSERT_(right);
+        TREE_INSERT_(rightChild);
     }
 
     #undef TREE_INSERT_
 
     if (tree->size == 0)
     {
-        Node_t *newBeginNode = tree->root->left;
+        Node_t *newBeginNode = tree->root->leftChild;
         free(tree->root->elem);
         free(tree->root);
         tree->root = newBeginNode;
+        tree->root->parent = nullptr;
     }
     tree->size   = tree->size + 1;
     newNode->num = tree->size + 1;
@@ -238,7 +240,7 @@ static char* StrBufferFindEndStr(char *str)
     return strchr(str, ')');
 }
 
-static NodeElemType DefineNodeElemType(const Node_t *node)
+static NodenodeType DefineNodenodeType(const Node_t *node)
 {
     assert(node != nullptr);
 
@@ -306,7 +308,7 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
         str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
 
         strncpy(newNode->elem, str, 1);
-        newNode->elemType = DefineNodeElemType(newNode);
+        newNode->nodeType = DefineNodenodeType(newNode);
 
         str = str + 1;
         str = NodeBuild(tree, newNode, str, treeError, RIGHT_CHILD);
@@ -337,7 +339,15 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
             str = endStr + 1;
         }
 
-        newNode->elemType = DefineNodeElemType(newNode);
+        newNode->nodeType = DefineNodenodeType(newNode);
+        if (newNode->nodeType == CONST)
+        {
+            newNode->value = atof(newNode->elem);
+        }
+        else
+        {
+            newNode->value = -1.0;
+        }
 
         while (*str == ')')
         {
@@ -376,20 +386,20 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
 
     fprintf(foutput, "(");
 
-    if (node->elemType == CONST || node->elemType == VARIABLE)
+    if (node->nodeType == CONST || node->nodeType == VARIABLE)
     {
         fprintf(foutput, "%s", node->elem);
     }
-    else if (node->elemType == SIN || node->elemType == COS || node->elemType == LN)
+    else if (node->nodeType == SIN || node->nodeType == COS || node->nodeType == LN)
     {
         fprintf(foutput, "%s", node->elem);
-        NodeSaveInFile(node->left, foutput, LEFT_CHILD);
+        NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
     }
     else
     {
-        NodeSaveInFile(node->left, foutput, LEFT_CHILD);
+        NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
         fprintf(foutput, "%s", node->elem);
-        NodeSaveInFile(node->right, foutput, RIGHT_CHILD);
+        NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
     }
 
     fprintf(foutput, ")");
