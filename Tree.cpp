@@ -45,11 +45,16 @@ static void NodeTypeBuild(const Node_t *node, NodeType *nodeType)
             strcpy(nodeType->color, "red");
             break;
         }
-        default:
+        case CONST:
         {
             strcpy(nodeType->shape, "rectangle");
             strcpy(nodeType->color, "green");
             break;
+        }
+        default:
+        {
+            printf("Error!\n");
+            return;
         }
     }
 }
@@ -75,6 +80,8 @@ static void TreeVisitPrintArrowInFile(const Node_t *node, FILE *foutput)
 {
     assert(node    != nullptr);
     assert(foutput != nullptr);
+
+    if (node->parent != nullptr) fprintf(foutput, "\t%lu -> %lu[color=red, fontsize=12]\n", node->num, node->parent->num);
 
     if (node->leftChild  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->leftChild->num);
 
@@ -215,7 +222,7 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, char *str, const NodeChild child,
         tree->root->parent = nullptr;
     }
     tree->size   = tree->size + 1;
-    newNode->num = tree->size + 1;
+    newNode->num = tree->size;
 
     return newNode;
 }
@@ -240,7 +247,7 @@ static char* StrBufferFindEndStr(char *str)
     return strchr(str, ')');
 }
 
-static NodenodeType DefineNodenodeType(const Node_t *node)
+static NodeOperationType DefineNodeOperationType(const Node_t *node)
 {
     assert(node != nullptr);
 
@@ -308,7 +315,7 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
         str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
 
         strncpy(newNode->elem, str, 1);
-        newNode->nodeType = DefineNodenodeType(newNode);
+        newNode->nodeType = DefineNodeOperationType(newNode);
 
         str = str + 1;
         str = NodeBuild(tree, newNode, str, treeError, RIGHT_CHILD);
@@ -339,7 +346,7 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
             str = endStr + 1;
         }
 
-        newNode->nodeType = DefineNodenodeType(newNode);
+        newNode->nodeType = DefineNodeOperationType(newNode);
         if (newNode->nodeType == CONST)
         {
             newNode->value = atof(newNode->elem);

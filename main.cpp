@@ -16,14 +16,40 @@ int main()
     return 0;
 }
 
-Node_t* DiffNode(Tree_t *tree, Node_t *node)
+void TreeCopy(Tree_t *tree, Node_t *node1, Node_t *node2)
+{
+    assert(tree  != nullptr);
+    assert(node1 != nullptr);
+    assert(node2 != nullptr);
+
+    TreeErrorCode treeError = TREE_NO_ERROR;
+
+    strcpy(node1->elem, node2->elem);
+    node1->nodeType = node2->nodeType;
+    node1->value = node2->value;
+
+    if (node2->leftChild  != nullptr)
+    {
+        TreeInsert(tree, node1, nullptr, LEFT_CHILD, &treeError);
+        TreeCopy(tree, node1->leftChild,  node2->leftChild );
+    }
+    if (node2->rightChild != nullptr)
+    {
+        TreeInsert(tree, node1, nullptr, RIGHT_CHILD, &treeError);
+        TreeCopy(tree, node1->rightChild, node2->rightChild);
+    }
+
+    return;
+}
+
+void DiffNode(Tree_t *tree, Node_t *node)
 {
     assert(tree != nullptr);
     assert(node != nullptr);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
 
-    switch (node->nodeType)
+    switch ((int)node->nodeType)
     {
         case CONST :
         {
@@ -43,25 +69,70 @@ Node_t* DiffNode(Tree_t *tree, Node_t *node)
         }
         case SIN:
         {
-            Node_t *newNode = TreeInsert(tree, node->parent, "*", (node->parent->leftChild == node) ? LEFT_CHILD : RIGHT_CHILD, &treeError);
+            Node_t *newNode = nullptr;
+
+            if (node->parent != nullptr)
+            {
+                NodeChild child = (node->parent->leftChild == node) ? LEFT_CHILD : RIGHT_CHILD;
+                newNode = TreeInsert(tree, node->parent, nullptr, child, &treeError);
+            }
+            else
+            {
+                newNode = (Node_t*)calloc(1, sizeof(Node_t));
+                if (newNode == nullptr)
+                {
+                    printf("Error in DiffNode - invalid pointer on newNode!\n");
+                    return;
+                }
+                newNode->elem = (elem_t*)calloc(STR_MAX_SIZE, sizeof(elem_t));
+                if (newNode->elem == nullptr)
+                {
+                    printf("Error in DiffNode - invalid pointer on newNode.elem!\n");
+                    return;
+                }
+                tree->root = newNode;
+                tree->size = tree->size + 1;
+                newNode->num = tree->size;
+            }
+            strcpy(newNode->elem, "*");
+            newNode->leftChild = node;
+            TreeInsert(tree, newNode, nullptr, RIGHT_CHILD, &treeError);
+            newNode->nodeType = MUL;
+            newNode->value = -1.0;
             memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
             strcpy(node->elem, "cos");
             node->parent = newNode;
             node->nodeType = COS;
             node->value = -1.0;
-            newNode = TreeInsert(tree, node->parent, nullptr, LEFT_CHILD, &treeError);
-            newNode->leftChild = DiffNode(tree, node->rightChild);
+            TreeCopy(tree, newNode->rightChild, newNode->leftChild->leftChild);
+            DiffNode(tree, newNode->rightChild);
             break;
         }
         case COS:
         {
-            memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
+            /*memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
             strcpy(node->elem, "*");
             TreeInsert(tree, node, "-sin", LEFT_CHILD, &treeError);
             node->leftChild->parent = node;
-            node->leftChild->nodeType = SIN;
+            node->leftChild->NodeOperationType = SIN;
             node->leftChild->value = -1.0;
-            node->rightChild = DiffNode(tree, node->rightChild);
+            DiffNode(tree, node->rightChild);
+            break;*/
+        }
+        case LN:
+        {
+            break;
+        }
+        case ADD:
+        {
+            DiffNode(tree, node->leftChild);
+            DiffNode(tree, node->rightChild);
+            break;
+        }
+        case SUB:
+        {
+            DiffNode(tree, node->leftChild);
+            DiffNode(tree, node->rightChild);
             break;
         }
         default:
@@ -70,7 +141,7 @@ Node_t* DiffNode(Tree_t *tree, Node_t *node)
         }
     }
 
-    return node;
+    return;
 }
 
 void DiffExpression(Tree_t *tree)
