@@ -2,6 +2,7 @@
 
 const size_t STR_MAX_SIZE = 100;
 
+void DiffNode(Tree_t *tree, Node_t *node);
 void DiffExpression(Tree_t *tree);
 
 int main()
@@ -16,7 +17,7 @@ int main()
     return 0;
 }
 
-void TreeCopy(Tree_t *tree, Node_t *node1, Node_t *node2)
+static void TreeCopy(Tree_t *tree, Node_t *node1, const Node_t *node2)
 {
     assert(tree  != nullptr);
     assert(node1 != nullptr);
@@ -40,6 +41,117 @@ void TreeCopy(Tree_t *tree, Node_t *node1, Node_t *node2)
     }
 
     return;
+}
+
+static void DiffUnaryOperationSin(Tree_t *tree, Node_t *node)
+{
+    assert(tree          != nullptr);
+    assert(node          != nullptr);
+
+    TreeErrorCode treeError = TREE_NO_ERROR;
+    Node_t *newNode = nullptr;
+
+        if (node->parent != nullptr)
+        {
+            NodeChild child = (node->parent->leftChild == node) ? LEFT_CHILD : RIGHT_CHILD;
+            newNode = TreeInsert(tree, node->parent, nullptr, child, &treeError);
+        }
+        else
+        {
+            newNode = (Node_t*)calloc(1, sizeof(Node_t));
+            if (newNode == nullptr)
+            {
+                printf("Error in DiffNode in SIN - invalid pointer on newNode!\n");
+                return;
+            }
+
+            newNode->elem = (elem_t*)calloc(STR_MAX_SIZE, sizeof(elem_t));
+            if (newNode->elem == nullptr)
+            {
+                printf("Error in DiffNode in SIN - invalid pointer on newNode->elem!\n");
+                return;
+            }
+
+            tree->root = newNode;
+            tree->size = tree->size + 1;
+            newNode->num = tree->size;
+        }
+
+        strcpy(newNode->elem, "*");
+        newNode->leftChild = node;
+        TreeInsert(tree, newNode, nullptr, RIGHT_CHILD, &treeError);
+        newNode->nodeType = MUL;
+        newNode->value = -1.0;
+
+        memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
+        strcpy(node->elem, "cos");
+        node->parent = newNode;
+        node->nodeType = COS;
+        node->value = -1.0;
+
+        TreeCopy(tree, newNode->rightChild, node->leftChild);
+        DiffNode(tree, newNode->rightChild);
+
+        return;
+}
+
+static void DiffUnaryOperationCos(Tree_t *tree, Node_t *node)
+{
+    assert(tree != nullptr);
+    assert(node != nullptr);
+
+    TreeErrorCode treeError = TREE_NO_ERROR;
+    Node_t *newNode = nullptr;
+
+        if (node->parent != nullptr)
+        {
+            NodeChild child = (node->parent->leftChild == node) ? LEFT_CHILD : RIGHT_CHILD;
+            newNode = TreeInsert(tree, node->parent, nullptr, child, &treeError);
+        }
+        else
+        {
+            newNode = (Node_t*)calloc(1, sizeof(Node_t));
+            if (newNode == nullptr)
+            {
+                printf("Error in DiffNode in COS - invalid pointer on newNode!\n");
+                return;
+            }
+
+            newNode->elem = (elem_t*)calloc(STR_MAX_SIZE, sizeof(elem_t));
+            if (newNode->elem == nullptr)
+            {
+                printf("Error in DiffNode in COS - invalid pointer on newNode->elem!\n");
+                return;
+            }
+
+            tree->root = newNode;
+            tree->size = tree->size + 1;
+            newNode->num = tree->size;
+        }
+
+        strcpy(newNode->elem, "*");
+        TreeInsert(tree, newNode, nullptr, RIGHT_CHILD, &treeError);
+        newNode->nodeType = MUL;
+        newNode->value = -1.0;
+
+        Node_t *newNode1 = TreeInsert(tree, newNode, "*", LEFT_CHILD, &treeError);
+        newNode1->leftChild = node;
+        TreeInsert(tree, newNode1, "-1", RIGHT_CHILD, &treeError);
+        newNode1->rightChild->nodeType = CONST;
+        newNode1->rightChild->value = -1.0;
+        newNode1->nodeType = MUL;
+        newNode1->value = -1.0;
+
+        memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
+        strcpy(node->elem, "sin");
+        node->parent = newNode1;
+        node->nodeType = SIN;
+        node->value = -1.0;
+
+        TreeCopy(tree, newNode->rightChild, node->leftChild);
+        DiffNode(tree, newNode->rightChild);
+
+        return;
 }
 
 void DiffNode(Tree_t *tree, Node_t *node)
@@ -67,60 +179,11 @@ void DiffNode(Tree_t *tree, Node_t *node)
             node->value = 1.0;
             break;
         }
-        case SIN:
-        {
-            Node_t *newNode = nullptr;
-
-            if (node->parent != nullptr)
-            {
-                NodeChild child = (node->parent->leftChild == node) ? LEFT_CHILD : RIGHT_CHILD;
-                newNode = TreeInsert(tree, node->parent, nullptr, child, &treeError);
-            }
-            else
-            {
-                newNode = (Node_t*)calloc(1, sizeof(Node_t));
-                if (newNode == nullptr)
-                {
-                    printf("Error in DiffNode - invalid pointer on newNode!\n");
-                    return;
-                }
-                newNode->elem = (elem_t*)calloc(STR_MAX_SIZE, sizeof(elem_t));
-                if (newNode->elem == nullptr)
-                {
-                    printf("Error in DiffNode - invalid pointer on newNode.elem!\n");
-                    return;
-                }
-                tree->root = newNode;
-                tree->size = tree->size + 1;
-                newNode->num = tree->size;
-            }
-            strcpy(newNode->elem, "*");
-            newNode->leftChild = node;
-            TreeInsert(tree, newNode, nullptr, RIGHT_CHILD, &treeError);
-            newNode->nodeType = MUL;
-            newNode->value = -1.0;
-            memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
-            strcpy(node->elem, "cos");
-            node->parent = newNode;
-            node->nodeType = COS;
-            node->value = -1.0;
-            TreeCopy(tree, newNode->rightChild, newNode->leftChild->leftChild);
-            DiffNode(tree, newNode->rightChild);
-            break;
-        }
-        case COS:
-        {
-            /*memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
-            strcpy(node->elem, "*");
-            TreeInsert(tree, node, "-sin", LEFT_CHILD, &treeError);
-            node->leftChild->parent = node;
-            node->leftChild->NodeOperationType = SIN;
-            node->leftChild->value = -1.0;
-            DiffNode(tree, node->rightChild);
-            break;*/
-        }
+        case SIN: { DiffUnaryOperationSin(tree, node); break; }
+        case COS: { DiffUnaryOperationCos(tree, node); break; }
         case LN:
         {
+
             break;
         }
         case ADD:
@@ -137,6 +200,7 @@ void DiffNode(Tree_t *tree, Node_t *node)
         }
         default:
         {
+            printf("Error - invalid nodeType!\n");
             break;
         }
     }
