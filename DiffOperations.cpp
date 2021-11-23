@@ -309,5 +309,43 @@ Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node)
     assert(tree != nullptr);
     assert(node != nullptr);
 
+    TreeErrorCode treeError = TREE_NO_ERROR;
+    Node_t *nodeLeftChild  = node->leftChild ;
+    Node_t *nodeRightChild = node->rightChild;
 
+    memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
+    strcpy(node->elem, "*");
+    node->nodeType = MUL;
+    node->value = -1.0;
+
+    TreeInsert(tree, node, nullptr, LEFT_CHILD, &treeError);
+    TreeCopy(tree, node->leftChild, nodeRightChild);
+
+    Node_t *newNode = TreeInsert(tree, node, "*", RIGHT_CHILD, &treeError);
+    newNode->nodeType = MUL;
+    newNode->value = -1.0;
+
+    Node_t *newNode1 = TreeInsert(tree, newNode, "^", LEFT_CHILD, &treeError);
+    newNode1->nodeType = DEGREE;
+    newNode1->value = -1.0;
+
+    TreeInsert(tree, newNode1, nullptr, LEFT_CHILD, &treeError);
+    TreeCopy(tree, newNode1->leftChild, nodeLeftChild);
+
+    Node_t *newNode2 = TreeInsert(tree, newNode1, "-", RIGHT_CHILD, &treeError);
+    newNode2->nodeType = SUB;
+    newNode2->value = -1.0;
+
+    TreeInsert(tree, newNode2, nullptr, LEFT_CHILD, &treeError);
+    TreeCopy(tree, newNode2->leftChild, nodeRightChild);
+
+    TreeInsert(tree, newNode2, "1", RIGHT_CHILD, &treeError);
+    newNode2->rightChild->nodeType = CONST;
+    newNode2->rightChild->value = 1.0;
+
+    TreeInsert(tree, newNode, nullptr, RIGHT_CHILD, &treeError);
+    newNode->rightChild = nodeLeftChild;
+    nodeLeftChild->parent = newNode;
+
+    return node;
 }
