@@ -33,4 +33,6 @@ Node_t* DiffUnaryOperationLn (Tree_t *tree, Node_t *node);
     DiffNode(tree, node->rightChild); \
     break
 
+Node_t *DiffBinaryOperationMul(Tree_t *tree, Node_t *node);
+
 #endif // DIFF_OPERATIONS_H_

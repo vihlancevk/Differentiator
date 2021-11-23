@@ -34,6 +34,15 @@ void DiffNode(Tree_t *tree, Node_t *node)
         case LN :      { DIFF_LN_()        ; }
         case ADD:
         case SUB:      { DIFF_ADD_OR_SUB_(); }
+        case MUL:
+        {
+            printf("FIRST\n");
+            Node_t *nodeCopy = DiffBinaryOperationMul(tree, node);
+            printf("SECOND\n");
+            DiffNode(tree, node->leftChild->leftChild  );
+            DiffNode(tree, node->rightChild->rightChild);
+            break;
+        }
         default:
         {
             printf("Error - invalid nodeType!\n");
