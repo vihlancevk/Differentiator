@@ -243,7 +243,6 @@ Node_t *DiffBinaryOperationMul(Tree_t *tree, Node_t *node)
 
     Node_t *newNode  = TreeInsert(tree, node, "*", LEFT_CHILD , &treeError);
     Node_t *newNode1 = TreeInsert(tree, node, "*", RIGHT_CHILD, &treeError);
-    printf("newNode->parent : 0%x newNode1->parent : 0%x\n", newNode->parent, newNode1->parent);
 
     newNode->nodeType = MUL;
     newNode->value = -1.0;
@@ -252,20 +251,63 @@ Node_t *DiffBinaryOperationMul(Tree_t *tree, Node_t *node)
 
     TreeInsert(tree, newNode, nullptr, RIGHT_CHILD, &treeError);
     TreeCopy(tree, newNode->rightChild, nodeRightChild);
-    printf("1 newNode->parent : 0%x newNode1->parent : 0%x\n", newNode->parent, newNode1->parent);
+
     TreeInsert(tree, newNode1, nullptr, LEFT_CHILD, &treeError);
     TreeCopy(tree, newNode1->leftChild, nodeLeftChild);
-    printf("2 newNode->parent : 0%x newNode1->parent : 0%x\n", newNode->parent, newNode1->parent);
+
     newNode->leftChild   = nodeLeftChild ;
     newNode1->rightChild = nodeRightChild;
-    printf("3 newNode->parent : 0%x newNode1->parent : 0%x\n", newNode->parent, newNode1->parent);
+
     nodeLeftChild->parent  = newNode ;
     nodeRightChild->parent = newNode1;
-    printf("4 newNode->parent : 0%x newNode1->parent : 0%x\n", newNode->parent, newNode1->parent);
-
-    printf("node : 0%x node->leftChild : 0%x node->rightChild : 0%x\n", node, node->leftChild, node->rightChild);
-    printf("newNode : 0%x newNode1 : 0%x\n", newNode, newNode1);
-    printf("newNode->parent : 0%x newNode1->parent : 0%x\n", newNode->parent, newNode1->parent);
 
     return node;
+}
+
+Node_t *DiffBinaryOperationDiv(Tree_t *tree, Node_t *node)
+{
+    assert(tree != nullptr);
+    assert(node != nullptr);
+
+    TreeErrorCode treeError = TREE_NO_ERROR;
+    Node_t *nodeLeftChild  = node->leftChild ;
+    Node_t *nodeRightChild = node->rightChild;
+
+    Node_t *newNode = TreeInsert(tree, node, "-", LEFT_CHILD, &treeError);
+    newNode->nodeType = SUB;
+    newNode->value = -1.0;
+
+    Node_t *newNode1 = TreeInsert(tree, newNode, "*", LEFT_CHILD, &treeError);
+    newNode1->nodeType = MUL;
+    newNode1->value = -1.0;
+    newNode1->leftChild = nodeLeftChild;
+    nodeLeftChild->parent = newNode1;
+    TreeInsert(tree, newNode1, nullptr, RIGHT_CHILD, &treeError);
+    TreeCopy(tree, newNode1->rightChild, nodeRightChild);
+
+    Node_t *newNode2 = TreeInsert(tree, newNode, "*", RIGHT_CHILD, &treeError);
+    newNode2->nodeType = MUL;
+    newNode2->value = -1.0;
+    newNode2->rightChild = nodeRightChild;
+    nodeRightChild->parent = newNode2;
+    TreeInsert(tree, newNode2, nullptr, LEFT_CHILD, &treeError);
+    TreeCopy(tree, newNode2->leftChild, nodeLeftChild);
+
+    Node_t *newNode3 = TreeInsert(tree, node, "*", RIGHT_CHILD, &treeError);
+    newNode->nodeType = SUB;
+    newNode->value = -1.0;
+    TreeInsert(tree, newNode3, nullptr, LEFT_CHILD, &treeError);
+    TreeCopy(tree, newNode3->leftChild, nodeRightChild);
+    TreeInsert(tree, newNode3, nullptr, RIGHT_CHILD, &treeError);
+    TreeCopy(tree, newNode3->rightChild, nodeRightChild);
+
+    return node;
+}
+
+Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node)
+{
+    assert(tree != nullptr);
+    assert(node != nullptr);
+
+
 }

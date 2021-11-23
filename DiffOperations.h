@@ -34,5 +34,21 @@ Node_t* DiffUnaryOperationLn (Tree_t *tree, Node_t *node);
     break
 
 Node_t *DiffBinaryOperationMul(Tree_t *tree, Node_t *node);
+#define DIFF_MUL_()                                        \
+    Node_t *nodeCopy = DiffBinaryOperationMul(tree, node); \
+    DiffNode(tree, node->leftChild->leftChild  );          \
+    DiffNode(tree, node->rightChild->rightChild);          \
+    break
+
+Node_t *DiffBinaryOperationDiv(Tree_t *tree, Node_t *node);
+#define DIFF_DIV_()                                          \
+    DiffBinaryOperationDiv(tree, node);                      \
+    DiffNode(tree, node->leftChild->leftChild->leftChild);   \
+    DiffNode(tree, node->leftChild->rightChild->rightChild); \
+    break
+
+Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node);
+#define DIFF_DEGREE_() \
+    break
 
 #endif // DIFF_OPERATIONS_H_
