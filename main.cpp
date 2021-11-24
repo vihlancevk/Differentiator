@@ -52,7 +52,7 @@ void DiffExpression(Tree_t *tree)
 {
     DiffNode(tree, tree->root);
 
-    TreeDump(tree);
+    /*TreeDump(tree);*/
 
     SimplifyExpression(tree);
 
