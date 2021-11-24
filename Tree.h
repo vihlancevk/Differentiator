@@ -56,7 +56,7 @@ struct Node_t
     Node_t *rightChild;
     NodeOperationType nodeType;
     double value;
-    size_t num;
+    int num;
 };
 
 struct Tree_t

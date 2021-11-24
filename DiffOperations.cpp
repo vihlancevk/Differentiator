@@ -11,8 +11,6 @@ void DiffConst(Tree_t *tree, Node_t *node)
     strcpy(node->elem, "0");
     node->nodeType = CONST;
     node->value = 0.0;
-
-    return;
 }
 
 void DiffVariable(Tree_t *tree, Node_t *node)
@@ -24,8 +22,6 @@ void DiffVariable(Tree_t *tree, Node_t *node)
     strcpy(node->elem, "1");
     node->nodeType = CONST;
     node->value = 1.0;
-
-    return;
 }
 
 static void TreeCopy(Tree_t *tree, Node_t *node1, const Node_t *node2)
@@ -50,8 +46,6 @@ static void TreeCopy(Tree_t *tree, Node_t *node1, const Node_t *node2)
         TreeInsert(tree, node1, nullptr, RIGHT_CHILD, &treeError);
         TreeCopy(tree, node1->rightChild, node2->rightChild);
     }
-
-    return;
 }
 
 static void NodeDtor(Node_t *node)
@@ -156,7 +150,7 @@ Node_t* DiffUnaryOperationCos(Tree_t *tree, Node_t *node)
         newNode1->leftChild = node;
         TreeInsert(tree, newNode1, "-1", RIGHT_CHILD, &treeError);
         newNode1->rightChild->nodeType = CONST;
-        newNode1->rightChild->value = -1.0;
+        newNode1->rightChild->value = 1.0;
         newNode1->nodeType = MUL;
         newNode1->value = -1.0;
 
@@ -214,7 +208,7 @@ Node_t* DiffUnaryOperationLn(Tree_t *tree, Node_t *node)
     newNode1->rightChild = node->leftChild;
     TreeInsert(tree, newNode1, "1", LEFT_CHILD, &treeError);
     newNode1->leftChild->nodeType = CONST;
-    newNode1->leftChild->value = -1.0;
+    newNode1->leftChild->value = 1.0;
     newNode1->nodeType = DIV;
     newNode1->value = -1.0;
 
@@ -294,8 +288,8 @@ Node_t *DiffBinaryOperationDiv(Tree_t *tree, Node_t *node)
     TreeCopy(tree, newNode2->leftChild, nodeLeftChild);
 
     Node_t *newNode3 = TreeInsert(tree, node, "*", RIGHT_CHILD, &treeError);
-    newNode->nodeType = SUB;
-    newNode->value = -1.0;
+    newNode3->nodeType = MUL;
+    newNode3->value = -1.0;
     TreeInsert(tree, newNode3, nullptr, LEFT_CHILD, &treeError);
     TreeCopy(tree, newNode3->leftChild, nodeRightChild);
     TreeInsert(tree, newNode3, nullptr, RIGHT_CHILD, &treeError);

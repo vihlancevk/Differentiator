@@ -1,5 +1,6 @@
 #include "Tree.h"
 #include "DiffOperations.h"
+#include "SimplifyingExpression.h"
 
 const size_t STR_MAX_SIZE = 100;
 
@@ -50,6 +51,10 @@ void DiffNode(Tree_t *tree, Node_t *node)
 void DiffExpression(Tree_t *tree)
 {
     DiffNode(tree, tree->root);
+
+    TreeDump(tree);
+
+    SimplifyExpression(tree);
 
     TreeDump(tree);
 

@@ -53,7 +53,7 @@ static void NodeTypeBuild(const Node_t *node, NodeType *nodeType)
         }
         default:
         {
-            printf("Error!\n");
+            printf("Error in NodeTypeBuild!\n");
             return;
         }
     }
@@ -69,7 +69,7 @@ static void TreeVisitPrintNodeInFile(const Node_t *node, FILE *foutput)
     NodeTypeBuild(node, &nodeType);
 
     char str[STR_MAX_SIZE] = {};
-    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", node->num, nodeType.shape, nodeType.color, node->elem);
+    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", node->num, nodeType.shape, nodeType.color, node->elem, node->value);
     fprintf(foutput, "%s", str);
 
     if (node->leftChild  != nullptr) TreeVisitPrintNodeInFile(node->leftChild, foutput);
@@ -316,6 +316,7 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
 
         strncpy(newNode->elem, str, 1);
         newNode->nodeType = DefineNodeOperationType(newNode);
+        newNode->value = -1.0;
 
         str = str + 1;
         str = NodeBuild(tree, newNode, str, treeError, RIGHT_CHILD);
