@@ -167,10 +167,36 @@ static void SimplifyDegree(Tree_t *tree, Node_t *node)
     assert(tree != nullptr);
     assert(node != nullptr);
 
-    /*if (node->rightChild->value == 0.0)
+    if (node->rightChild->value == 0.0)
     {
-        memset(node->)
-    }*/
+        memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
+        strcpy(node->elem, "1");
+        node->nodeType = CONST;
+        node->value = 1.0;
+        PartTreeDtor(node->leftChild);
+        node->leftChild = nullptr;
+        NodeDtor(node->rightChild);
+        node->rightChild = nullptr;
+        status = status + 1;
+    }
+    else if (node->rightChild->value == 1.0)
+    {
+        if (node->parent == nullptr)
+        {
+            node->leftChild->parent = nullptr;
+            tree->root = node->leftChild;
+            node->leftChild = nullptr;
+            PartTreeDtor(node);
+        }
+        else
+        {
+            node->leftChild->parent =  node->parent;
+            if (node->parent->leftChild == node) { node->parent->leftChild  = node->leftChild; }
+            else                                 { node->parent->rightChild = node->leftChild; }
+            node->leftChild = nullptr;
+            PartTreeDtor(node);
+        }
+    }
 }
 
 #undef SIMPLIFY_OPERATIONS_
@@ -195,7 +221,7 @@ static void CheckNode(Tree_t *tree, Node_t *node)
         case SUB   : { /*printf("ADD OR SUB")*/ ; SimplifyAddAndSub(tree, node); /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d /home/kostya/Differentiator/graphviz.png\n");}*/ break ; }
         case MUL   : { /*printf("MUL")       */ ; SimplifyMul(tree, node)      ; /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d /home/kostya/Differentiator/graphviz.png\n");}*/ break ; }
         case DIV   : { /*printf("DIV")       */ ; SimplifyDiv(tree, node)      ; /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d /home/kostya/Differentiator/graphviz.png\n");}*/ break ; }
-        case DEGREE: { /*printf("DEGREE")    */                                ; /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d /home/kostya/Differentiator/graphviz.png\n");}*/ break ; }
+        case DEGREE: { /*printf("DEGREE")    */ ; SimplifyDegree(tree, node)   ; /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d /home/kostya/Differentiator/graphviz.png\n");}*/ break ; }
         default    : { break ; }
     }
 

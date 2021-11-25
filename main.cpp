@@ -50,6 +50,8 @@ void DiffNode(Tree_t *tree, Node_t *node)
 
 void DiffExpression(Tree_t *tree)
 {
+    SimplifyExpression(tree);
+
     DiffNode(tree, tree->root);
 
     /*TreeDump(tree);*/
