@@ -34,18 +34,20 @@ enum TreeErrorCode
 
 //! Number of operation ADD (and SUB, MUL, DIV, DEGREE) is number this symbol in ASCII table
 
-enum NodeOperationType
+enum NodeType
 {
-    CONST = 0,
-    VARIABLE = 1,
-    SIN = 2,
-    COS = 3,
-    LN = 4,
-    ADD = 43,
-    SUB = 45,
-    MUL = 42,
-    DIV = 47,
-    DEGREE = 94,
+    CONST      = 0 ,
+    VARIABLE_X = 1 ,
+    VARIABLE_Y = 2 ,
+    VARIABLE_Z = 3 ,
+    SIN        = 4 ,
+    COS        = 5 ,
+    LN         = 6 ,
+    ADD        = 43,
+    SUB        = 45,
+    MUL        = 42,
+    DIV        = 47,
+    DEGREE     = 94,
 };
 
 struct Node_t
@@ -54,9 +56,8 @@ struct Node_t
     Node_t *parent;
     Node_t *leftChild;
     Node_t *rightChild;
-    NodeOperationType nodeType;
+    NodeType nodeType;
     double value;
-    int num;
 };
 
 struct Tree_t

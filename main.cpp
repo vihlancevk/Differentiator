@@ -28,16 +28,18 @@ void DiffNode(Tree_t *tree, Node_t *node)
 
     switch ((int)node->nodeType)
     {
-        case CONST:    { DIFF_CONST_()     ; }
-        case VARIABLE: { DIFF_VARIABLE_()  ; }
-        case SIN:      { DIFF_SIN_()       ; }
-        case COS:      { DIFF_COS_()       ; }
-        case LN :      { DIFF_LN_()        ; }
+        case CONST:      { DIFF_CONST_()     ; }
+        case VARIABLE_X: { DIFF_VARIABLE_()  ; }
+        case VARIABLE_Y: { DIFF_VARIABLE_()  ; }
+        case VARIABLE_Z: { DIFF_VARIABLE_()  ; }
+        case SIN:        { DIFF_SIN_()       ; }
+        case COS:        { DIFF_COS_()       ; }
+        case LN :        { DIFF_LN_()        ; }
         case ADD:
-        case SUB:      { DIFF_ADD_OR_SUB_(); }
-        case MUL:      { DIFF_MUL_()       ; }
-        case DIV:      { DIFF_DIV_()       ; }
-        case DEGREE:   { DIFF_DEGREE_()    ; }
+        case SUB:        { DIFF_ADD_OR_SUB_(); }
+        case MUL:        { DIFF_MUL_()       ; }
+        case DIV:        { DIFF_DIV_()       ; }
+        case DEGREE:     { DIFF_DEGREE_()    ; }
         default:
         {
             printf("Error - invalid nodeType!\n");
@@ -53,8 +55,6 @@ void DiffExpression(Tree_t *tree)
     SimplifyExpression(tree);
 
     DiffNode(tree, tree->root);
-
-    /*TreeDump(tree);*/
 
     SimplifyExpression(tree);
 

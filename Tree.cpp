@@ -4,59 +4,57 @@
 #define DEBUG
 
 const size_t STR_MAX_SIZE = 100;
-const char *TREE_GRAPH_VIZ   = "/home/kostya/Differentiator/graphviz.gv";
-const char *INPUT_FILE_NAME  = "/home/kostya/Differentiator/data.txt";
-const char *OUTPUT_FILE_NAME = "/home/kostya/Differentiator/data.txt";
+const char *TREE_GRAPH_VIZ   = "graphviz.gv";
+const char *INPUT_FILE_NAME  = "data.txt";
+const char *OUTPUT_FILE_NAME = "data.txt";
 
-struct NodeType
+struct NodeView
 {
     char shape[20];
     char color[20];
+    char str[5];
 };
 
-static void NodeTypeBuild(const Node_t *node, NodeType *nodeType)
+static void NodeViewBuild(const Node_t *node, NodeView *nodeView)
 {
     assert(node     != nullptr);
-    assert(nodeType != nullptr);
+    assert(nodeView != nullptr);
+
+    #define SET_NODE_VIEW_(thisShape, thisColor, thisStr) \
+        strcpy(nodeView->shape , #thisShape);            \
+        strcpy(nodeView->color , #thisColor );            \
+        strcpy(nodeView->str   , #thisStr   );            \
+        break
 
     switch ((int)node->nodeType)
     {
-        case ADD:
-        case SUB:
-        case MUL:
-        case DIV:
-        case DEGREE:
-        {
-            strcpy(nodeType->shape, "octagon");
-            strcpy(nodeType->color, "yellow");
-            break;
-        }
-        case SIN:
-        case COS:
-        case LN:
-        {
-            strcpy(nodeType->shape, "circle");
-            strcpy(nodeType->color, "yellow");
-            break;
-        }
-        case VARIABLE:
-        {
-            strcpy(nodeType->shape, "rectangle");
-            strcpy(nodeType->color, "red");
-            break;
-        }
+        case ADD:        { SET_NODE_VIEW_(octagon, yellow, +)  ; }
+        case SUB:        { SET_NODE_VIEW_(octagon, yellow, -)  ; }
+        case MUL:        { SET_NODE_VIEW_(octagon, yellow, *)  ; }
+        case DIV:        { SET_NODE_VIEW_(octagon, yellow, /)  ; }
+        case DEGREE:     { SET_NODE_VIEW_(octagon, yellow, ^)  ; }
+        case SIN:        { SET_NODE_VIEW_(circle, yellow, sin) ; }
+        case COS:        { SET_NODE_VIEW_(circle, yellow, cos) ; }
+        case LN:         { SET_NODE_VIEW_(circle, yellow, ln)  ; }
+        case VARIABLE_X: { SET_NODE_VIEW_(rectangle, red, x)   ; }
+        case VARIABLE_Y: { SET_NODE_VIEW_(rectangle, red, y)   ; }
+        case VARIABLE_Z: { SET_NODE_VIEW_(rectangle, red, z)   ; }
         case CONST:
         {
-            strcpy(nodeType->shape, "rectangle");
-            strcpy(nodeType->color, "green");
+            sprintf(nodeView->str, "%0.1f", node->value);
+            strcpy(nodeView->shape, "rectangle");
+            strcpy(nodeView->color, "green");
             break;
         }
         default:
         {
-            printf("Error in NodeTypeBuild!\n");
-            return;
+            printf("Error in NodeViewBuild!\n");
+            break;
         }
     }
+
+    #undef SET_NODE_VIEW_
+
 }
 
 static void TreeVisitPrintNodeInFile(const Node_t *node, FILE *foutput)
@@ -64,12 +62,12 @@ static void TreeVisitPrintNodeInFile(const Node_t *node, FILE *foutput)
     assert(node    != nullptr);
     assert(foutput != nullptr);
 
-    NodeType nodeType = {};
+    NodeView nodeView = {};
 
-    NodeTypeBuild(node, &nodeType);
+    NodeViewBuild(node, &nodeView);
 
     char str[STR_MAX_SIZE] = {};
-    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", node->num, nodeType.shape, nodeType.color, node->elem, node->value);
+    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", node, nodeView.shape, nodeView.color, nodeView.str);
     fprintf(foutput, "%s", str);
 
     if (node->leftChild  != nullptr) TreeVisitPrintNodeInFile(node->leftChild, foutput);
@@ -81,11 +79,11 @@ static void TreeVisitPrintArrowInFile(const Node_t *node, FILE *foutput)
     assert(node    != nullptr);
     assert(foutput != nullptr);
 
-    if (node->parent != nullptr) fprintf(foutput, "\t%lu -> %lu[color=red, fontsize=12]\n", node->num, node->parent->num);
+    if (node->parent != nullptr) fprintf(foutput, "\t%lu -> %lu[color=red, fontsize=12]\n", node, node->parent);
 
-    if (node->leftChild  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->leftChild->num);
+    if (node->leftChild  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node, node->leftChild);
 
-    if (node->rightChild != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node->num, node->rightChild->num);
+    if (node->rightChild != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node, node->rightChild);
 
     if (node->leftChild  != nullptr) TreeVisitPrintArrowInFile(node->leftChild, foutput);
     if (node->rightChild != nullptr) TreeVisitPrintArrowInFile(node->rightChild, foutput);
@@ -111,7 +109,7 @@ void TreeDump(Tree_t *tree)
 
     fclose(graphViz);
 
-    system("dot -Tpng /home/kostya/Differentiator/graphviz.gv -o /home/kostya/Differentiator/graphviz.png");
+    system("dot -Tpng graphviz.gv -o graphviz.png");
 }
 
 TreeErrorCode TreeCtor(Tree_t *tree)
@@ -136,7 +134,6 @@ TreeErrorCode TreeCtor(Tree_t *tree)
         treeError = TREE_CONSTRUCTED_ERROR;
     }
     strcpy(tree->root->elem, "Begin");
-    tree->root->num = 1;
 
     tree->size = 0;
     tree->status = TREE_CONSTRUCTED;
@@ -222,7 +219,6 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, char *str, const NodeChild child,
         tree->root->parent = nullptr;
     }
     tree->size   = tree->size + 1;
-    newNode->num = tree->size;
 
     return newNode;
 }
@@ -247,16 +243,24 @@ static char* StrBufferFindEndStr(char *str)
     return strchr(str, ')');
 }
 
-static NodeOperationType DefineNodeOperationType(const Node_t *node)
+static NodeType DefineNodeType(const Node_t *node)
 {
     assert(node != nullptr);
 
     #define STRCOMPARE_(str) \
         strcmp(node->elem, str) == 0
 
-    if (STRCOMPARE_("x") ||  STRCOMPARE_("y") || STRCOMPARE_("z"))
+    if (STRCOMPARE_("x"))
     {
-        return VARIABLE;
+        return VARIABLE_X;
+    }
+    else if (STRCOMPARE_("y"))
+    {
+        return VARIABLE_Y;
+    }
+    else if (STRCOMPARE_("z"))
+    {
+        return VARIABLE_Z;
     }
     else if (STRCOMPARE_("sin"))
     {
@@ -315,7 +319,7 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
         str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
 
         strncpy(newNode->elem, str, 1);
-        newNode->nodeType = DefineNodeOperationType(newNode);
+        newNode->nodeType = DefineNodeType(newNode);
         newNode->value = -1.0;
 
         str = str + 1;
@@ -347,7 +351,7 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
             str = endStr + 1;
         }
 
-        newNode->nodeType = DefineNodeOperationType(newNode);
+        newNode->nodeType = DefineNodeType(newNode);
         if (newNode->nodeType == CONST)
         {
             newNode->value = atof(newNode->elem);
@@ -394,7 +398,7 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
 
     fprintf(foutput, "(");
 
-    if (node->nodeType == CONST || node->nodeType == VARIABLE)
+    if (node->nodeType == CONST || node->nodeType == VARIABLE_X || node->nodeType == VARIABLE_Y || node->nodeType == VARIABLE_Z)
     {
         fprintf(foutput, "%s", node->elem);
     }
