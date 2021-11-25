@@ -52,7 +52,6 @@ enum NodeType
 
 struct Node_t
 {
-    elem_t *elem;
     Node_t *parent;
     Node_t *leftChild;
     Node_t *rightChild;
@@ -71,9 +70,11 @@ void TreeDump(Tree_t *tree);
 
 TreeErrorCode TreeCtor(Tree_t *tree);
 
-Node_t* TreeInsert(Tree_t *tree, Node_t *node, char *str, const NodeChild child, TreeErrorCode *treeError);
+Node_t* TreeInsert(Tree_t *tree, Node_t *node, const NodeChild child, TreeErrorCode *treeError);
 
 TreeErrorCode TreeDtor(Tree_t *tree);
+
+void SetNodeType(Node_t *node, const NodeType nodeType,  const double value);
 
 TreeErrorCode TreeBuild(Tree_t *tree);
 

@@ -128,12 +128,6 @@ TreeErrorCode TreeCtor(Tree_t *tree)
     {
         treeError = TREE_CONSTRUCTED_ERROR;
     }
-    tree->root->elem = (char*)calloc(STR_MAX_SIZE, sizeof(char));
-    if (tree->root->elem == nullptr)
-    {
-        treeError = TREE_CONSTRUCTED_ERROR;
-    }
-    strcpy(tree->root->elem, "Begin");
 
     tree->size = 0;
     tree->status = TREE_CONSTRUCTED;
@@ -147,7 +141,7 @@ static void NodeDtor(Node_t *node)
 
     Node_t *leftChild  = node->leftChild;
     Node_t *rightChild = node->rightChild;
-    free(node->elem);
+
     free(node);
 
     if (leftChild  != nullptr) NodeDtor(leftChild);
@@ -170,7 +164,7 @@ TreeErrorCode TreeDtor(Tree_t *tree)
     return TREE_NO_ERROR;
 }
 
-Node_t* TreeInsert(Tree_t *tree, Node_t *node, char *str, const NodeChild child, TreeErrorCode *treeError)
+Node_t* TreeInsert(Tree_t *tree, Node_t *node, const NodeChild child, TreeErrorCode *treeError)
 {
     assert(tree      != nullptr);
     assert(node      != nullptr);
@@ -185,15 +179,6 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, char *str, const NodeChild child,
         if (node->branch == nullptr)                                        \
         {                                                                   \
             *treeError = TREE_INSERT_ERROR;                                 \
-        }                                                                   \
-        node->branch->elem = (elem_t*)calloc(STR_MAX_SIZE, sizeof(elem_t)); \
-        if (node->branch->elem == nullptr)                                  \
-        {                                                                   \
-            *treeError = TREE_INSERT_ERROR;                                 \
-        }                                                                   \
-        if (str != nullptr)                                                 \
-        {                                                                   \
-            strcpy(node->branch->elem, str);                                \
         }                                                                   \
         node->branch->parent = node;                                        \
         newNode = node->branch;                                             \
@@ -213,7 +198,6 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, char *str, const NodeChild child,
     if (tree->size == 0)
     {
         Node_t *newBeginNode = tree->root->leftChild;
-        free(tree->root->elem);
         free(tree->root);
         tree->root = newBeginNode;
         tree->root->parent = nullptr;
@@ -243,12 +227,12 @@ static char* StrBufferFindEndStr(char *str)
     return strchr(str, ')');
 }
 
-static NodeType DefineNodeType(const Node_t *node)
+static NodeType DefineNodeType(const char *str)
 {
-    assert(node != nullptr);
+    assert(str != nullptr);
 
-    #define STRCOMPARE_(str) \
-        strcmp(node->elem, str) == 0
+    #define STRCOMPARE_(thisStr) \
+        strcmp(str, thisStr) == 0
 
     if (STRCOMPARE_("x"))
     {
@@ -302,6 +286,14 @@ static NodeType DefineNodeType(const Node_t *node)
     #undef STRCOMPARE_
 }
 
+void SetNodeType(Node_t *node, const NodeType nodeType, const double value)
+{
+    assert(node != nullptr);
+
+    node->nodeType = nodeType;
+    node->value    = value;
+}
+
 static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *treeError, const NodeChild child)
 {
     assert(tree      != nullptr);
@@ -313,13 +305,13 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
 
     if (*str == '(' && *(str + 1) == '(')
     {
-        Node_t *newNode = TreeInsert(tree, node, nullptr, child, treeError);
+        Node_t *newNode = TreeInsert(tree, node, child, treeError);
 
         str = str + 1;
         str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
 
-        strncpy(newNode->elem, str, 1);
-        newNode->nodeType = DefineNodeType(newNode);
+        strncpy(mathOperation, str, 1);
+        newNode->nodeType = DefineNodeType(mathOperation);
         newNode->value = -1.0;
 
         str = str + 1;
@@ -328,18 +320,16 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
     else
     {
         str = str + 1;
-        Node_t *newNode = TreeInsert(tree, node, nullptr, child, treeError);
+        Node_t *newNode = TreeInsert(tree, node, child, treeError);
         if (strncmp(str, "sin", 3) == 0 || strncmp(str, "cos", 3) == 0)
         {
             strncpy(mathOperation, str, 3);
-            strcpy(newNode->elem, mathOperation);
             str = str + 3;
             str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
         }
         else if (strncmp(str, "ln", 2) == 0)
         {
             strncpy(mathOperation, str, 2);
-            strcpy(newNode->elem, mathOperation);
             str = str + 2;
             str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
         }
@@ -347,14 +337,14 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
         {
             char *endStr = StrBufferFindEndStr(str);
             *endStr = '\0';
-            strcpy(newNode->elem, str);
+            strcpy(mathOperation, str);
             str = endStr + 1;
         }
 
-        newNode->nodeType = DefineNodeType(newNode);
+        newNode->nodeType = DefineNodeType(mathOperation);
         if (newNode->nodeType == CONST)
         {
-            newNode->value = atof(newNode->elem);
+            newNode->value = atof(mathOperation);
         }
         else
         {
@@ -391,7 +381,7 @@ TreeErrorCode TreeBuild(Tree_t *tree)
     return treeError;
 }
 
-static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
+/*static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
 {
     assert(node    != nullptr);
     assert(foutput != nullptr);
@@ -415,7 +405,7 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
     }
 
     fprintf(foutput, ")");
-}
+} */
 
 TreeErrorCode TreeSaveInFile(Tree_t *tree)
 {
@@ -423,7 +413,7 @@ TreeErrorCode TreeSaveInFile(Tree_t *tree)
 
     FILE *data = fopen(OUTPUT_FILE_NAME, "w");
 
-    NodeSaveInFile(tree->root, data, LEFT_CHILD);
+    //NodeSaveInFile(tree->root, data, LEFT_CHILD);
 
     TreeDump(tree);
 

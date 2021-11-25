@@ -1,13 +1,10 @@
 #include <stdlib.h>
 #include "SimplifyingExpression.h"
 
-const size_t STR_MAX_SIZE = 100;
-
 static void NodeDtor(Node_t *node)
 {
     assert(node != nullptr);
 
-    free(node->elem);
     free(node);
 }
 
@@ -17,7 +14,7 @@ static void PartTreeDtor(Node_t *node)
 
     Node_t *leftChild  = node->leftChild;
     Node_t *rightChild = node->rightChild;
-    free(node->elem);
+
     free(node);
 
     if (leftChild  != nullptr) NodeDtor(leftChild);
@@ -26,16 +23,13 @@ static void PartTreeDtor(Node_t *node)
 
 int status = 0;
 
-#define OPERATION_WITH_NODE_(operation)                                     \
-    node->value = node->leftChild->value operation node->rightChild->value; \
-    node->nodeType = CONST;                                                 \
-    memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);                     \
-    snprintf(node->elem, sizeof(char) * STR_MAX_SIZE, "%.1f", node->value); \
-    NodeDtor(node->leftChild );                                             \
-    NodeDtor(node->rightChild);                                             \
-    node->leftChild  = nullptr;                                             \
-    node->rightChild = nullptr;                                             \
-    status = status + 1;                                                    \
+#define OPERATION_WITH_NODE_(operation)                                                 \
+    SetNodeType(node, CONST, node->leftChild->value operation node->rightChild->value); \
+    NodeDtor(node->leftChild );                                                         \
+    NodeDtor(node->rightChild);                                                         \
+    node->leftChild  = nullptr;                                                         \
+    node->rightChild = nullptr;                                                         \
+    status = status + 1;                                                                \
     break
 
 static void SimplifyConst(Node_t *node)
@@ -67,9 +61,6 @@ static void SimplifyConst(Node_t *node)
         {                                                                               \
            tree->root = node->child;                                                    \
         }                                                                               \
-        node->parent = nullptr;                                                         \
-        node->leftChild  = nullptr;                                                     \
-        node->rightChild = nullptr;                                                     \
         NodeDtor(node);                                                                 \
         status = status + 1;                                                            \
     } while(0)
@@ -103,19 +94,16 @@ static void SimplifyMul(Tree_t *tree, Node_t *node)
         if (node->parent->leftChild == node)
         {
             node->parent->leftChild = nullptr;
-            TreeInsert(tree, node->parent, "0", LEFT_CHILD, &treeError);
-            node->parent->leftChild->nodeType = CONST;
-            node->parent->leftChild->value = 0.0;
+            TreeInsert(tree, node->parent, LEFT_CHILD, &treeError);
+            SetNodeType(node->parent->leftChild, CONST, 0.0);
         }
         else
         {
             node->parent->rightChild = nullptr;
-            TreeInsert(tree, node->parent, "0", RIGHT_CHILD, &treeError);
-            node->parent->rightChild->nodeType = CONST;
-            node->parent->rightChild->value = 0.0;
+            TreeInsert(tree, node->parent, RIGHT_CHILD, &treeError);
+            SetNodeType(node->parent->rightChild, CONST, 0.0);
         }
         PartTreeDtor(node);
-        TreeDump(tree);
         status = status + 1;
     }
 
@@ -143,15 +131,14 @@ static void SimplifyDiv(Tree_t *tree, Node_t *node)
         if (node->parent->leftChild == node)
         {
             node->parent->leftChild = nullptr;
-            TreeInsert(tree, node->parent, "0", LEFT_CHILD, &treeError);
+            TreeInsert(tree, node->parent, LEFT_CHILD, &treeError);
         }
         else
         {
             node->parent->rightChild = nullptr;
-            TreeInsert(tree, node->parent, "0", RIGHT_CHILD, &treeError);
+            TreeInsert(tree, node->parent, RIGHT_CHILD, &treeError);
         }
-        node->parent->rightChild->nodeType = CONST;
-        node->parent->rightChild->value = 0.0;
+        SetNodeType(node->parent->rightChild, CONST, 0.0);
         PartTreeDtor(node);
         status = status + 1;
     }
@@ -169,10 +156,7 @@ static void SimplifyDegree(Tree_t *tree, Node_t *node)
 
     if (node->rightChild->value == 0.0)
     {
-        memset(node->elem, 0, sizeof(char) * STR_MAX_SIZE);
-        strcpy(node->elem, "1");
-        node->nodeType = CONST;
-        node->value = 1.0;
+        SetNodeType(node, CONST, 1.0);
         PartTreeDtor(node->leftChild);
         node->leftChild = nullptr;
         NodeDtor(node->rightChild);
