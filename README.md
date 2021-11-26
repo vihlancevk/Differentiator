@@ -1,6 +1,6 @@
 # Differentiator
-The program differentiates expressions from one variable (x).
-You need to enter in the file data.txt the expression that needs to be differentiated in the full bracket notation:
+The program differentiates expressions from one variable (x).\n
+You need to enter in the file data.txt the expression that needs to be differentiated in the full bracket notation:\n
 ((3)/(x))+(ln(x))
 The program supports the following operations:
 ( + ) - add;
