@@ -72,7 +72,7 @@ static Node_t* BuildNewNodeForUnaryOperation(Tree_t *tree, Node_t *node)
         newNode = (Node_t*)calloc(1, sizeof(Node_t));
         if (newNode == nullptr)
         {
-            printf("Error in DiffNode in UnaryOperation - invalid pointer on newNode!\n");
+            printf("Error in DiffExpression in UnaryOperation - invalid pointer on newNode!\n");
             return nullptr;
         }
 
@@ -259,6 +259,8 @@ Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node)
     TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
     newNode->rightChild = leftChild;
     leftChild->parent = newNode;
+
+    NodeDtor(rightChild);
 
     return node;
 }

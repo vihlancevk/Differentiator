@@ -61,16 +61,26 @@ static void SimplifyConst(Node_t *node)
         {                                                                               \
            tree->root = node->child;                                                    \
         }                                                                               \
-        NodeDtor(node);                                                                 \
+        StackPush(stack, node);                                                         \
         status = status + 1;                                                            \
     } while(0)
 
-static void SimplifyAddAndSub(Tree_t *tree, Node_t *node)
+static void SimplifyAddAndSub(Tree_t *tree, Node_t *node, stack_t *stack)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    assert(tree  != nullptr);
+    assert(node  != nullptr);
+    assert(stack != nullptr);
 
-    if (node->leftChild->value == 0.0)
+    if (node->nodeType == SUB && node->leftChild->nodeType == VARIABLE && node->rightChild->nodeType == VARIABLE)
+    {
+        NodeDtor(node->leftChild);
+        node->leftChild = nullptr;
+        NodeDtor(node->rightChild);
+        node->rightChild = nullptr;
+        SetNodeType(node, CONST, 0.0);
+        status = status + 1;
+    }
+    else if (node->leftChild->value == 0.0)
     {
         NodeDtor(node->leftChild);
         SIMPLIFY_OPERATIONS_(rightChild);
@@ -82,10 +92,11 @@ static void SimplifyAddAndSub(Tree_t *tree, Node_t *node)
     }
 }
 
-static void SimplifyMul(Tree_t *tree, Node_t *node)
+static void SimplifyMul(Tree_t *tree, Node_t *node, stack_t *stack)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    assert(tree  != nullptr);
+    assert(node  != nullptr);
+    assert(stack != nullptr);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
 
@@ -119,14 +130,23 @@ static void SimplifyMul(Tree_t *tree, Node_t *node)
     }
 }
 
-static void SimplifyDiv(Tree_t *tree, Node_t *node)
+static void SimplifyDiv(Tree_t *tree, Node_t *node, stack_t *stack)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    assert(tree  != nullptr);
+    assert(node  != nullptr);
+    assert(stack != nullptr);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
-
-    if (node->leftChild->value == 0.0)
+    if (node->leftChild->nodeType == VARIABLE && node->rightChild->nodeType == VARIABLE)
+    {
+        NodeDtor(node->leftChild);
+        node->leftChild = nullptr;
+        NodeDtor(node->rightChild);
+        node->rightChild = nullptr;
+        SetNodeType(node, CONST, 1.0);
+        status = status + 1;
+    }
+    else if (node->leftChild->value == 0.0)
     {
         if (node->parent->leftChild == node)
         {
@@ -145,22 +165,24 @@ static void SimplifyDiv(Tree_t *tree, Node_t *node)
     else if (node->rightChild->value == 1.0)
     {
         NodeDtor(node->rightChild);
+        node->rightChild = nullptr;
         SIMPLIFY_OPERATIONS_(leftChild);
     }
 }
 
-static void SimplifyDegree(Tree_t *tree, Node_t *node)
+static void SimplifyDegree(Tree_t *tree, Node_t *node, stack_t *stack)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    assert(tree  != nullptr);
+    assert(node  != nullptr);
+    assert(stack != nullptr);
 
     if (node->rightChild->value == 0.0)
     {
-        SetNodeType(node, CONST, 1.0);
         PartTreeDtor(node->leftChild);
         node->leftChild = nullptr;
         NodeDtor(node->rightChild);
         node->rightChild = nullptr;
+        SetNodeType(node, CONST, 1.0);
         status = status + 1;
     }
     else if (node->rightChild->value == 1.0)
@@ -174,7 +196,7 @@ static void SimplifyDegree(Tree_t *tree, Node_t *node)
         }
         else
         {
-            node->leftChild->parent =  node->parent;
+            node->leftChild->parent = node->parent;
             if (node->parent->leftChild == node) { node->parent->leftChild  = node->leftChild; }
             else                                 { node->parent->rightChild = node->leftChild; }
             node->leftChild = nullptr;
@@ -183,17 +205,31 @@ static void SimplifyDegree(Tree_t *tree, Node_t *node)
     }
 }
 
+static void SimplifyLn(Tree_t *tree, Node_t *node, stack_t *stack)
+{
+    assert(tree  != nullptr);
+    assert(node  != nullptr);
+    assert(stack != nullptr);
+
+    if (node->leftChild->nodeType == CONST && node->leftChild->value == 1.0)
+    {
+        PartTreeDtor(node->leftChild);
+        node->leftChild = nullptr;
+        SetNodeType(node, CONST, 0.0);
+        status = status + 1;
+    }
+}
+
 #undef SIMPLIFY_OPERATIONS_
 
-static void CheckNode(Tree_t *tree, Node_t *node)
+static void CheckNode(Tree_t *tree, Node_t *node, stack_t *stack)
 {
     assert(tree != nullptr);
     assert(node != nullptr);
 
-    if (node->leftChild  == nullptr) return;
-    if (node->rightChild == nullptr) return;
 
-    if (node->leftChild->nodeType == CONST && node->rightChild->nodeType == CONST)
+    if (node->leftChild != nullptr && node->rightChild != nullptr &&
+        node->leftChild->nodeType == CONST && node->rightChild->nodeType == CONST)
     {
         SimplifyConst(node);
         return;
@@ -202,24 +238,37 @@ static void CheckNode(Tree_t *tree, Node_t *node)
     switch ((int)node->nodeType)
     {
         case ADD:
-        case SUB   : { ; SimplifyAddAndSub(tree, node); break ; }
-        case MUL   : { ; SimplifyMul(tree, node)      ; break ; }
-        case DIV   : { ; SimplifyDiv(tree, node)      ; break ; }
-        case DEGREE: { ; SimplifyDegree(tree, node)   ; break ; }
-        default    : { break ; }
+        case SUB   : { ; SimplifyAddAndSub(tree, node, stack); break ; }
+        case MUL   : { ; SimplifyMul(tree, node, stack)      ; break ; }
+        case DIV   : { ; SimplifyDiv(tree, node, stack)      ; break ; }
+        case DEGREE: { ; SimplifyDegree(tree, node, stack)   ; break ; }
+        case LN    : { ; SimplifyLn(tree, node, stack)       ; break ; }
+        default    : { ;                                     ; break ; }
     }
 
-    if (node->leftChild  != nullptr) CheckNode(tree, node->leftChild );
-    if (node->rightChild != nullptr) CheckNode(tree, node->rightChild);
+    if (node->leftChild  != nullptr) CheckNode(tree, node->leftChild , stack);
+    if (node->rightChild != nullptr) CheckNode(tree, node->rightChild, stack);
 }
 
 void SimplifyExpression(Tree_t *tree)
 {
     assert(tree != nullptr);
 
+    stack_t stack = {};
+    StackCtor(&stack, 100);
+
     do
     {
         status = 0;
-        CheckNode(tree, tree->root);
+        CheckNode(tree, tree->root, &stack);
     } while(status != 0);
+
+    while(stack.size > 0)
+    {
+        Node_t *ptrNode = nullptr;
+        StackPop(&stack, &ptrNode);
+        NodeDtor(ptrNode);
+    }
+
+    StackDtor(&stack);
 }

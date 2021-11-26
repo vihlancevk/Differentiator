@@ -1,7 +1,7 @@
 #ifndef SIMPLIFYING_EXPRESSION_H_
 #define SIMPLIFYING_EXPRESSION_H_
 
-#include "Tree.h"
+#include "Stack.h"
 
 void SimplifyExpression(Tree_t *tree);
 

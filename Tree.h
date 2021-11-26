@@ -12,14 +12,14 @@ typedef char elem_t;
 enum NodeChild
 {
     RIGHT_CHILD,
-    LEFT_CHILD,
+    LEFT_CHILD
 };
 
 enum TreeStatus
 {
     TREE_NOT_CONSTRUCTED,
     TREE_CONSTRUCTED,
-    TREE_DESTRUCTED,
+    TREE_DESTRUCTED
 };
 
 enum TreeErrorCode
@@ -29,7 +29,7 @@ enum TreeErrorCode
     TREE_INSERT_ERROR,
     TREE_DESTRUCTED_ERROR,
     TREE_FILL_ERROR,
-    TREE_OBJECT_DEFINITION_MODE_ERROR,
+    TREE_OBJECT_DEFINITION_MODE_ERROR
 };
 
 //! Number of NodeType elements is number this symbol in ASCII table
@@ -37,9 +37,7 @@ enum TreeErrorCode
 enum NodeType
 {
     CONST      = 0  ,
-    VARIABLE_X = 120,
-    VARIABLE_Y = 121,
-    VARIABLE_Z = 122,
+    VARIABLE   = 120,
     SIN        = 4  ,
     COS        = 5  ,
     LN         = 6  ,
@@ -47,7 +45,7 @@ enum NodeType
     SUB        = 45 ,
     MUL        = 42 ,
     DIV        = 47 ,
-    DEGREE     = 94 ,
+    DEGREE     = 94
 };
 
 struct Node_t
@@ -78,6 +76,6 @@ void SetNodeType(Node_t *node, const NodeType nodeType,  const double value);
 
 TreeErrorCode TreeBuild(Tree_t *tree);
 
-TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data);
+TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data, const char *str);
 
 #endif // TREE_H_

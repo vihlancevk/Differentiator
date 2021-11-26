@@ -3,10 +3,9 @@
 
 #define DEBUG
 
-const size_t STR_MAX_SIZE = 100;
+const size_t STR_MAX_SIZE = 120;
 const char *TREE_GRAPH_VIZ   = "graphviz.gv";
 const char *INPUT_FILE_NAME  = "data.txt";
-static const char *OUTPUT_FILE_NAME = "data.tex";
 
 struct NodeView
 {
@@ -28,17 +27,15 @@ static void NodeViewBuild(const Node_t *node, NodeView *nodeView)
 
     switch ((int)node->nodeType)
     {
-        case ADD:        { SET_NODE_VIEW_(octagon, yellow, +)  ; }
-        case SUB:        { SET_NODE_VIEW_(octagon, yellow, -)  ; }
-        case MUL:        { SET_NODE_VIEW_(octagon, yellow, *)  ; }
-        case DIV:        { SET_NODE_VIEW_(octagon, yellow, /)  ; }
-        case DEGREE:     { SET_NODE_VIEW_(octagon, yellow, ^)  ; }
-        case SIN:        { SET_NODE_VIEW_(circle, yellow, sin) ; }
-        case COS:        { SET_NODE_VIEW_(circle, yellow, cos) ; }
-        case LN:         { SET_NODE_VIEW_(circle, yellow, ln)  ; }
-        case VARIABLE_X: { SET_NODE_VIEW_(rectangle, red, x)   ; }
-        case VARIABLE_Y: { SET_NODE_VIEW_(rectangle, red, y)   ; }
-        case VARIABLE_Z: { SET_NODE_VIEW_(rectangle, red, z)   ; }
+        case ADD:      { SET_NODE_VIEW_(octagon, yellow, +)  ; }
+        case SUB:      { SET_NODE_VIEW_(octagon, yellow, -)  ; }
+        case MUL:      { SET_NODE_VIEW_(octagon, yellow, *)  ; }
+        case DIV:      { SET_NODE_VIEW_(octagon, yellow, /)  ; }
+        case DEGREE:   { SET_NODE_VIEW_(octagon, yellow, ^)  ; }
+        case SIN:      { SET_NODE_VIEW_(circle, yellow, sin) ; }
+        case COS:      { SET_NODE_VIEW_(circle, yellow, cos) ; }
+        case LN:       { SET_NODE_VIEW_(circle, yellow, ln)  ; }
+        case VARIABLE: { SET_NODE_VIEW_(rectangle, red, x)   ; }
         case CONST:
         {
             sprintf(nodeView->str, "%g", node->value);
@@ -67,7 +64,7 @@ static void TreeVisitPrintNodeInFile(const Node_t *node, FILE *foutput)
     NodeViewBuild(node, &nodeView);
 
     char str[STR_MAX_SIZE] = {};
-    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", node, nodeView.shape, nodeView.color, nodeView.str);
+    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", (long unsigned int)node, nodeView.shape, nodeView.color, nodeView.str);
     fprintf(foutput, "%s", str);
 
     if (node->leftChild  != nullptr) TreeVisitPrintNodeInFile(node->leftChild, foutput);
@@ -79,11 +76,11 @@ static void TreeVisitPrintArrowInFile(const Node_t *node, FILE *foutput)
     assert(node    != nullptr);
     assert(foutput != nullptr);
 
-    if (node->parent != nullptr) fprintf(foutput, "\t%lu -> %lu[color=red, fontsize=12]\n", node, node->parent);
+    if (node->parent != nullptr) fprintf(foutput, "\t%lu -> %lu[color=red, fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->parent);
 
-    if (node->leftChild  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node, node->leftChild);
+    if (node->leftChild  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->leftChild);
 
-    if (node->rightChild != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", node, node->rightChild);
+    if (node->rightChild != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->rightChild);
 
     if (node->leftChild  != nullptr) TreeVisitPrintArrowInFile(node->leftChild, foutput);
     if (node->rightChild != nullptr) TreeVisitPrintArrowInFile(node->rightChild, foutput);
@@ -202,7 +199,7 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, const NodeChild child, TreeErrorC
         tree->root = newBeginNode;
         tree->root->parent = nullptr;
     }
-    tree->size   = tree->size + 1;
+    tree->size = tree->size + 1;
 
     return newNode;
 }
@@ -236,15 +233,7 @@ static NodeType DefineNodeType(const char *str)
 
     if (STRCOMPARE_("x"))
     {
-        return VARIABLE_X;
-    }
-    else if (STRCOMPARE_("y"))
-    {
-        return VARIABLE_Y;
-    }
-    else if (STRCOMPARE_("z"))
-    {
-        return VARIABLE_Z;
+        return VARIABLE;
     }
     else if (STRCOMPARE_("sin"))
     {
@@ -379,7 +368,7 @@ TreeErrorCode TreeBuild(Tree_t *tree)
     return treeError;
 }
 
-static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
+static void NodeSaveInFile(Node_t *node, FILE *foutput)
 {
     assert(node    != nullptr);
     assert(foutput != nullptr);
@@ -388,7 +377,7 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
     {
         fprintf(foutput, "%g", node->value);
     }
-    else if (node->nodeType == VARIABLE_X || node->nodeType == VARIABLE_Y || node->nodeType == VARIABLE_Z)
+    else if (node->nodeType == VARIABLE)
     {
         fprintf(foutput, "%c", node->nodeType);
     }
@@ -396,21 +385,27 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
     {
         fprintf(foutput, "\\sin");
         fprintf(foutput, "{");
-        NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+        fprintf(foutput, "(");
+        NodeSaveInFile(node->leftChild, foutput);
+        fprintf(foutput, ")");
         fprintf(foutput, "}");
     }
     else if (node->nodeType == COS)
     {
         fprintf(foutput, "\\cos");
         fprintf(foutput, "{");
-        NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+        fprintf(foutput, "(");
+        NodeSaveInFile(node->leftChild, foutput);
+        fprintf(foutput, ")");
         fprintf(foutput, "}");
     }
     else if (node->nodeType == LN)
     {
         fprintf(foutput, "\\ln");
         fprintf(foutput, "{");
-        NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+        fprintf(foutput, "(");
+        NodeSaveInFile(node->leftChild, foutput);
+        fprintf(foutput, ")");
         fprintf(foutput, "}");
     }
     else
@@ -418,13 +413,13 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
         if (node->nodeType == MUL)
         {
             fprintf(foutput, "{");
-            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            NodeSaveInFile(node->leftChild, foutput);
             fprintf(foutput, "}");
 
             fprintf(foutput, "\\cdot");
 
             fprintf(foutput, "{");
-            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+            NodeSaveInFile(node->rightChild, foutput);
             fprintf(foutput, "}");
         }
         else if (node->nodeType == DIV)
@@ -432,36 +427,43 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
             fprintf(foutput, "\\frac");
 
             fprintf(foutput, "{");
-            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            NodeSaveInFile(node->leftChild, foutput);
             fprintf(foutput, "}");
 
             fprintf(foutput, "{");
-            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+            NodeSaveInFile(node->rightChild, foutput);
             fprintf(foutput, "}");
         }
         else if (node->nodeType == DEGREE)
         {
-            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            NodeSaveInFile(node->leftChild, foutput);
             fprintf(foutput, "%c", node->nodeType);
             fprintf(foutput, "{");
-            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+            NodeSaveInFile(node->rightChild, foutput);
             fprintf(foutput, "}");
         }
         else
         {
-            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            fprintf(foutput, "(");
+            NodeSaveInFile(node->leftChild, foutput);
             fprintf(foutput, "%c", node->nodeType);
-            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+            NodeSaveInFile(node->rightChild, foutput);
+            fprintf(foutput, ")");
         }
     }
 }
 
-TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data)
+TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data, const char *str)
 {
     assert(tree != nullptr);
     assert(data != nullptr);
+    assert(str  != nullptr);
 
-    NodeSaveInFile(tree->root, data, LEFT_CHILD);
+    fprintf(data, "%s", str);
+    fprintf(data, "\\[");
+    NodeSaveInFile(tree->root, data);
+    fprintf(data, "\\]");
+    fprintf(data, "\n\n");
 
     return TREE_NO_ERROR;
 }
