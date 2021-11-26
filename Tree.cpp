@@ -21,7 +21,7 @@ static void NodeViewBuild(const Node_t *node, NodeView *nodeView)
     assert(nodeView != nullptr);
 
     #define SET_NODE_VIEW_(thisShape, thisColor, thisStr) \
-        strcpy(nodeView->shape , #thisShape);            \
+        strcpy(nodeView->shape , #thisShape);             \
         strcpy(nodeView->color , #thisColor );            \
         strcpy(nodeView->str   , #thisStr   );            \
         break

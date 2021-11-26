@@ -32,14 +32,14 @@ enum TreeErrorCode
     TREE_OBJECT_DEFINITION_MODE_ERROR,
 };
 
-//! Number of operation ADD (and SUB, MUL, DIV, DEGREE) is number this symbol in ASCII table
+//! Number of NodeType elements is number this symbol in ASCII table
 
 enum NodeType
 {
     CONST      = 0 ,
-    VARIABLE_X = 1 ,
-    VARIABLE_Y = 2 ,
-    VARIABLE_Z = 3 ,
+    VARIABLE_X = 78,
+    VARIABLE_Y = 79,
+    VARIABLE_Z = 80,
     SIN        = 4 ,
     COS        = 5 ,
     LN         = 6 ,

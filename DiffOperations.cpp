@@ -91,15 +91,14 @@ Node_t* DiffUnaryOperationSin(Tree_t *tree, Node_t *node)
     TreeErrorCode treeError = TREE_NO_ERROR;
 
     Node_t *newNode = BuildNewNodeForUnaryOperation(tree, node);
-
-    newNode->leftChild = node;
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
     SetNodeType(newNode, MUL, NODE_NO_VALUE);
 
+    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
+    TreeCopy(tree, newNode->rightChild, node->leftChild);
+
+    newNode->leftChild = node;
     node->parent = newNode;
     SetNodeType(node, COS, NODE_NO_VALUE);
-
-    TreeCopy(tree, newNode->rightChild, node->leftChild);
 
     return newNode->rightChild;
 }
@@ -110,20 +109,22 @@ Node_t* DiffUnaryOperationCos(Tree_t *tree, Node_t *node)
     assert(node != nullptr);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
+
     Node_t *newNode = BuildNewNodeForUnaryOperation(tree, node);
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
     SetNodeType(newNode, MUL, NODE_NO_VALUE);
 
-    Node_t *newNode1 = TreeInsert(tree, newNode, LEFT_CHILD, &treeError);
-    newNode1->leftChild = node;
-    TreeInsert(tree, newNode1, RIGHT_CHILD, &treeError);
-    SetNodeType(newNode1->rightChild, CONST, -1.0          );
-    SetNodeType(newNode1,             MUL  , NODE_NO_VALUE );
+    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
+    TreeCopy(tree, newNode->rightChild, node->leftChild);
 
+    Node_t *newNode1 = TreeInsert(tree, newNode, LEFT_CHILD, &treeError);
+    SetNodeType(newNode1, MUL, NODE_NO_VALUE );
+
+    newNode1->leftChild = node;
     node->parent = newNode1;
     SetNodeType(node, SIN, NODE_NO_VALUE);
 
-    TreeCopy(tree, newNode->rightChild, node->leftChild);
+    TreeInsert(tree, newNode1, RIGHT_CHILD, &treeError);
+    SetNodeType(newNode1->rightChild, CONST, -1.0);
 
     return newNode->rightChild;
 }
@@ -134,20 +135,21 @@ Node_t* DiffUnaryOperationLn(Tree_t *tree, Node_t *node)
     assert(node != nullptr);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
-    Node_t *newNode = BuildNewNodeForUnaryOperation(tree, node);
 
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
+    Node_t *newNode = BuildNewNodeForUnaryOperation(tree, node);
     SetNodeType(newNode, MUL, NODE_NO_VALUE);
 
-    Node_t *newNode1 = TreeInsert(tree, newNode, LEFT_CHILD, &treeError);
-    newNode1->rightChild = node->leftChild;
-    TreeInsert(tree, newNode1, LEFT_CHILD, &treeError);
-    SetNodeType(newNode1->leftChild, CONST, 1.0          );
-    SetNodeType(newNode1           , DIV  , NODE_NO_VALUE);
-
-    node->leftChild->parent = newNode1;
-
+    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
     TreeCopy(tree, newNode->rightChild, node->leftChild);
+
+    Node_t *newNode1 = TreeInsert(tree, newNode, LEFT_CHILD, &treeError);
+    SetNodeType(newNode1, DIV, NODE_NO_VALUE);
+
+    TreeInsert(tree, newNode1, LEFT_CHILD, &treeError);
+    SetNodeType(newNode1->leftChild, CONST, 1.0);
+
+    newNode1->rightChild = node->leftChild;
+    node->leftChild->parent = newNode1;
 
     NodeDtor(node);
 
@@ -160,27 +162,29 @@ Node_t *DiffBinaryOperationMul(Tree_t *tree, Node_t *node)
     assert(node != nullptr);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
-    Node_t *nodeLeftChild  = node->leftChild ;
-    Node_t *nodeRightChild = node->rightChild;
+    Node_t *leftChild  = node->leftChild ;
+    Node_t *rightChild = node->rightChild;
+
+    #define BUILD_NODE_BRANCH_(branch)                                                                              \
+        do                                                                                                          \
+        {                                                                                                           \
+        Node_t *branch##Node = nullptr;                                                                             \
+        if (strcmp("leftChild", #branch) == 0) { branch##Node = TreeInsert(tree, node, LEFT_CHILD, &treeError)  ; } \
+        else                                   { branch##Node = TreeInsert(tree, node, RIGHT_CHILD, &treeError) ; } \
+        SetNodeType(branch##Node, MUL, NODE_NO_VALUE);                                                              \
+        branch##Node->branch = branch;                                                                              \
+        branch->parent = branch##Node;                                                                              \
+        TreeInsert(tree, branch##Node, (strcmp("leftChild", #branch) == 0) ? RIGHT_CHILD : LEFT_CHILD, &treeError); \
+        if (strcmp("leftChild", #branch) == 0) { TreeCopy(tree, branch##Node->rightChild, rightChild) ; }           \
+        else                                   { TreeCopy(tree, branch##Node->leftChild, leftChild)   ; }           \
+        } while(0)
+
 
     SetNodeType(node, ADD, NODE_NO_VALUE);
 
-    Node_t *newNode  = TreeInsert(tree, node, LEFT_CHILD , &treeError);
-    SetNodeType(newNode, MUL, NODE_NO_VALUE);
-    Node_t *newNode1 = TreeInsert(tree, node, RIGHT_CHILD, &treeError);
-    SetNodeType(newNode1, MUL, NODE_NO_VALUE);
+    BUILD_NODE_BRANCH_(leftChild);
 
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
-    TreeCopy(tree, newNode->rightChild, nodeRightChild);
-
-    TreeInsert(tree, newNode1, LEFT_CHILD, &treeError);
-    TreeCopy(tree, newNode1->leftChild, nodeLeftChild);
-
-    newNode->leftChild   = nodeLeftChild ;
-    newNode1->rightChild = nodeRightChild;
-
-    nodeLeftChild->parent  = newNode ;
-    nodeRightChild->parent = newNode1;
+    BUILD_NODE_BRANCH_(rightChild);
 
     return node;
 }
