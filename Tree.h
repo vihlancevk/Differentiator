@@ -36,18 +36,18 @@ enum TreeErrorCode
 
 enum NodeType
 {
-    CONST      = 0 ,
-    VARIABLE_X = 78,
-    VARIABLE_Y = 79,
-    VARIABLE_Z = 80,
-    SIN        = 4 ,
-    COS        = 5 ,
-    LN         = 6 ,
-    ADD        = 43,
-    SUB        = 45,
-    MUL        = 42,
-    DIV        = 47,
-    DEGREE     = 94,
+    CONST      = 0  ,
+    VARIABLE_X = 120,
+    VARIABLE_Y = 121,
+    VARIABLE_Z = 122,
+    SIN        = 4  ,
+    COS        = 5  ,
+    LN         = 6  ,
+    ADD        = 43 ,
+    SUB        = 45 ,
+    MUL        = 42 ,
+    DIV        = 47 ,
+    DEGREE     = 94 ,
 };
 
 struct Node_t

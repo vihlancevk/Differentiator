@@ -58,5 +58,7 @@ void DiffExpression(Tree_t *tree)
 
     TreeDump(tree);
 
+    TreeSaveInFile(tree);
+
     assert(tree != nullptr);
 }
