@@ -41,7 +41,7 @@ static void NodeViewBuild(const Node_t *node, NodeView *nodeView)
         case VARIABLE_Z: { SET_NODE_VIEW_(rectangle, red, z)   ; }
         case CONST:
         {
-            sprintf(nodeView->str, "%0.1f", node->value);
+            sprintf(nodeView->str, "%g", node->value);
             strcpy(nodeView->shape, "rectangle");
             strcpy(nodeView->color, "green");
             break;
@@ -386,7 +386,7 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
 
     if (node->nodeType == CONST)
     {
-        fprintf(foutput, "%0.1f", node->value);
+        fprintf(foutput, "%g", node->value);
     }
     else if (node->nodeType == VARIABLE_X || node->nodeType == VARIABLE_Y || node->nodeType == VARIABLE_Z)
     {
@@ -430,6 +430,7 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
         else if (node->nodeType == DIV)
         {
             fprintf(foutput, "\\frac");
+
             fprintf(foutput, "{");
             NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
             fprintf(foutput, "}");
@@ -461,8 +462,6 @@ TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data)
     assert(data != nullptr);
 
     NodeSaveInFile(tree->root, data, LEFT_CHILD);
-
-    fprintf(data, "\n");
 
     return TREE_NO_ERROR;
 }
