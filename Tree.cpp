@@ -6,7 +6,7 @@
 const size_t STR_MAX_SIZE = 100;
 const char *TREE_GRAPH_VIZ   = "graphviz.gv";
 const char *INPUT_FILE_NAME  = "data.txt";
-const char *OUTPUT_FILE_NAME = "data.tex";
+static const char *OUTPUT_FILE_NAME = "data.tex";
 
 struct NodeView
 {
@@ -375,8 +375,6 @@ TreeErrorCode TreeBuild(Tree_t *tree)
 
     NodeBuild(tree, tree->root, strCopy, &treeError, LEFT_CHILD);
 
-    TreeDump(tree);
-
     free(str);
     return treeError;
 }
@@ -385,8 +383,6 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
 {
     assert(node    != nullptr);
     assert(foutput != nullptr);
-
-    //fprintf(foutput, "(");
 
     if (node->nodeType == CONST)
     {
@@ -398,39 +394,75 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput, NodeChild child)
     }
     else if (node->nodeType == SIN)
     {
-        fprintf(foutput, "%s", "sin");
+        fprintf(foutput, "\\sin");
+        fprintf(foutput, "{");
         NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+        fprintf(foutput, "}");
     }
     else if (node->nodeType == COS)
     {
-        fprintf(foutput, "%s", "cos");
+        fprintf(foutput, "\\cos");
+        fprintf(foutput, "{");
         NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+        fprintf(foutput, "}");
     }
     else if (node->nodeType == LN)
     {
-        fprintf(foutput, "%s", "ln");
+        fprintf(foutput, "\\ln");
+        fprintf(foutput, "{");
         NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+        fprintf(foutput, "}");
     }
     else
     {
-        NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
-        fprintf(foutput, "%c", node->nodeType);
-        NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
-    }
+        if (node->nodeType == MUL)
+        {
+            fprintf(foutput, "{");
+            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            fprintf(foutput, "}");
 
-    //fprintf(foutput, ")");
+            fprintf(foutput, "\\cdot");
+
+            fprintf(foutput, "{");
+            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+            fprintf(foutput, "}");
+        }
+        else if (node->nodeType == DIV)
+        {
+            fprintf(foutput, "\\frac");
+            fprintf(foutput, "{");
+            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            fprintf(foutput, "}");
+
+            fprintf(foutput, "{");
+            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+            fprintf(foutput, "}");
+        }
+        else if (node->nodeType == DEGREE)
+        {
+            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            fprintf(foutput, "%c", node->nodeType);
+            fprintf(foutput, "{");
+            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+            fprintf(foutput, "}");
+        }
+        else
+        {
+            NodeSaveInFile(node->leftChild, foutput, LEFT_CHILD);
+            fprintf(foutput, "%c", node->nodeType);
+            NodeSaveInFile(node->rightChild, foutput, RIGHT_CHILD);
+        }
+    }
 }
 
-TreeErrorCode TreeSaveInFile(Tree_t *tree)
+TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data)
 {
     assert(tree != nullptr);
-
-    FILE *data = fopen(OUTPUT_FILE_NAME, "w");
+    assert(data != nullptr);
 
     NodeSaveInFile(tree->root, data, LEFT_CHILD);
 
-    TreeDump(tree);
+    fprintf(data, "\n");
 
-    fclose(data);
     return TREE_NO_ERROR;
 }

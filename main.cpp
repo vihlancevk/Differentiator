@@ -2,6 +2,8 @@
 #include "DiffOperations.h"
 #include "SimplifyingExpression.h"
 
+static const char *OUTPUT_FILE_NAME = "data.tex";
+
 void DiffNode(Tree_t *tree, Node_t *node);
 void DiffExpression(Tree_t *tree);
 
@@ -50,15 +52,32 @@ void DiffNode(Tree_t *tree, Node_t *node)
 
 void DiffExpression(Tree_t *tree)
 {
+    assert(tree != nullptr);
+
+    FILE *foutput = fopen(OUTPUT_FILE_NAME, "a");
+
+    fprintf(foutput, "1. Выражение для дифференцирования:\n\n");
+    TreeSaveInFile(tree, foutput);
+    fprintf(foutput, "\n\n");
+
     SimplifyExpression(tree);
+
+    fprintf(foutput, "2. Первоначальная обработка выражения:\n\n");
+    TreeSaveInFile(tree, foutput);
+    fprintf(foutput, "\n\n");
 
     DiffNode(tree, tree->root);
 
+    fprintf(foutput, "3. Выражение после дифференцирования:\n\n");
+    TreeSaveInFile(tree, foutput);
+    fprintf(foutput, "\n\n");
+
     SimplifyExpression(tree);
 
-    TreeDump(tree);
+    fprintf(foutput, "4. Упрощенное выражение после дифференцирования:\n\n");
+    TreeSaveInFile(tree, foutput);
+    fprintf(foutput, "\n\n");
 
-    TreeSaveInFile(tree);
-
-    assert(tree != nullptr);
+    fprintf(foutput, "\\end{document}");
+    fclose(foutput);
 }

@@ -78,6 +78,6 @@ void SetNodeType(Node_t *node, const NodeType nodeType,  const double value);
 
 TreeErrorCode TreeBuild(Tree_t *tree);
 
-TreeErrorCode TreeSaveInFile(Tree_t *tree);
+TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data);
 
 #endif // TREE_H_
