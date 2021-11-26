@@ -202,10 +202,10 @@ static void CheckNode(Tree_t *tree, Node_t *node)
     switch ((int)node->nodeType)
     {
         case ADD:
-        case SUB   : { /*printf("ADD OR SUB")*/ ; SimplifyAddAndSub(tree, node); /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d graphviz.png\n");}*/ break ; }
-        case MUL   : { /*printf("MUL")       */ ; SimplifyMul(tree, node)      ; /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d graphviz.png\n");}*/ break ; }
-        case DIV   : { /*printf("DIV")       */ ; SimplifyDiv(tree, node)      ; /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d graphviz.png\n");}*/ break ; }
-        case DEGREE: { /*printf("DEGREE")    */ ; SimplifyDegree(tree, node)   ; /*printf(" %d\n", status); if (status != 0){TreeDump(tree); system("mimeopen -d graphviz.png\n");}*/ break ; }
+        case SUB   : { ; SimplifyAddAndSub(tree, node); break ; }
+        case MUL   : { ; SimplifyMul(tree, node)      ; break ; }
+        case DIV   : { ; SimplifyDiv(tree, node)      ; break ; }
+        case DEGREE: { ; SimplifyDegree(tree, node)   ; break ; }
         default    : { break ; }
     }
 

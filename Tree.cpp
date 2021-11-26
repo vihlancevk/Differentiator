@@ -6,7 +6,7 @@
 const size_t STR_MAX_SIZE = 100;
 const char *TREE_GRAPH_VIZ   = "graphviz.gv";
 const char *INPUT_FILE_NAME  = "data.txt";
-const char *OUTPUT_FILE_NAME = "data.txt";
+const char *OUTPUT_FILE_NAME = "data.tex";
 
 struct NodeView
 {
