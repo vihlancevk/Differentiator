@@ -47,10 +47,14 @@ Node_t *DiffBinaryOperationDiv(Tree_t *tree, Node_t *node);
     DiffExpression(tree, node->leftChild->rightChild->rightChild); \
     break
 
-Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node);
-#define DIFF_DEGREE_()                                  \
-    DiffBinaryOperationDegree(tree, node);              \
+Node_t *DiffBinaryOperationPow(Tree_t *tree, Node_t *node);
+#define DIFF_POW_()                                  \
+    DiffBinaryOperationPow(tree, node);              \
     DiffExpression(tree, node->rightChild->rightChild); \
     break
+
+void DiffExpression(Tree_t *tree, Node_t *node);
+
+void Differentiate(Tree_t *tree, FILE *foutput);
 
 #endif // DIFF_OPERATIONS_H_

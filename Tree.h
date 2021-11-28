@@ -45,7 +45,7 @@ enum NodeType
     SUB        = 45 ,
     MUL        = 42 ,
     DIV        = 47 ,
-    DEGREE     = 94
+    POW        = 94
 };
 
 struct Node_t
@@ -70,12 +70,18 @@ TreeErrorCode TreeCtor(Tree_t *tree);
 
 Node_t* TreeInsert(Tree_t *tree, Node_t *node, const NodeChild child, TreeErrorCode *treeError);
 
+void NodeDtor(Node_t *node);
+
+void SubtreeDtor(Node_t *node);
+
 TreeErrorCode TreeDtor(Tree_t *tree);
 
 void SetNodeType(Node_t *node, const NodeType nodeType,  const double value);
 
-TreeErrorCode TreeBuild(Tree_t *tree);
+TreeErrorCode TreeBuild(Tree_t *tree, FILE *finput);
 
 TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data, const char *str);
+
+int SubtreeCompare(const Node_t *node1, const Node_t *node2);
 
 #endif // TREE_H_

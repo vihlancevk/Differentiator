@@ -4,14 +4,16 @@
 #define DEBUG
 
 const size_t STR_MAX_SIZE = 120;
-const char *TREE_GRAPH_VIZ   = "graphviz.gv";
-const char *INPUT_FILE_NAME  = "data.txt";
+const size_t NodeView_STR_MAX_SIZE = 20;
+const int NOT_EQUAL = 0;
+const int EQUAL = 1;
+const char *TREE_GRAPHVIZ   = "graphviz.gv";
 
 struct NodeView
 {
-    char shape[20];
-    char color[20];
-    char str[5];
+    char shape[NodeView_STR_MAX_SIZE];
+    char color[NodeView_STR_MAX_SIZE];
+    char str[NodeView_STR_MAX_SIZE];
 };
 
 static void NodeViewBuild(const Node_t *node, NodeView *nodeView)
@@ -31,7 +33,7 @@ static void NodeViewBuild(const Node_t *node, NodeView *nodeView)
         case SUB:      { SET_NODE_VIEW_(octagon, yellow, -)  ; }
         case MUL:      { SET_NODE_VIEW_(octagon, yellow, *)  ; }
         case DIV:      { SET_NODE_VIEW_(octagon, yellow, /)  ; }
-        case DEGREE:   { SET_NODE_VIEW_(octagon, yellow, ^)  ; }
+        case POW:      { SET_NODE_VIEW_(octagon, yellow, ^)  ; }
         case SIN:      { SET_NODE_VIEW_(circle, yellow, sin) ; }
         case COS:      { SET_NODE_VIEW_(circle, yellow, cos) ; }
         case LN:       { SET_NODE_VIEW_(circle, yellow, ln)  ; }
@@ -64,7 +66,8 @@ static void TreeVisitPrintNodeInFile(const Node_t *node, FILE *foutput)
     NodeViewBuild(node, &nodeView);
 
     char str[STR_MAX_SIZE] = {};
-    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n", (long unsigned int)node, nodeView.shape, nodeView.color, nodeView.str);
+    sprintf(str, "\t%lu[shape=record, shape=%s, style=\"filled\", fillcolor=%s, label=\"%s\"];\n",
+                 (long unsigned int)node, nodeView.shape, nodeView.color, nodeView.str);
     fprintf(foutput, "%s", str);
 
     if (node->leftChild  != nullptr) TreeVisitPrintNodeInFile(node->leftChild, foutput);
@@ -76,19 +79,24 @@ static void TreeVisitPrintArrowInFile(const Node_t *node, FILE *foutput)
     assert(node    != nullptr);
     assert(foutput != nullptr);
 
-    if (node->parent != nullptr) fprintf(foutput, "\t%lu -> %lu[color=red, fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->parent);
+    if (node->parent != nullptr)
+        fprintf(foutput, "\t%lu -> %lu[color=red, fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->parent);
 
-    if (node->leftChild  != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->leftChild);
+    if (node->leftChild  != nullptr)
+        fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->leftChild);
 
-    if (node->rightChild != nullptr) fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->rightChild);
+    if (node->rightChild != nullptr)
+        fprintf(foutput, "\t%lu -> %lu[fontsize=12]\n", (long unsigned int)node, (long unsigned int)node->rightChild);
 
-    if (node->leftChild  != nullptr) TreeVisitPrintArrowInFile(node->leftChild, foutput);
-    if (node->rightChild != nullptr) TreeVisitPrintArrowInFile(node->rightChild, foutput);
+    if (node->leftChild  != nullptr)
+        TreeVisitPrintArrowInFile(node->leftChild, foutput);
+    if (node->rightChild != nullptr)
+        TreeVisitPrintArrowInFile(node->rightChild, foutput);
 }
 
 void TreeDump(Tree_t *tree)
 {
-    FILE *graphViz = fopen(TREE_GRAPH_VIZ, "w");
+    FILE *graphViz = fopen(TREE_GRAPHVIZ, "w");
 
     fprintf(graphViz, "digraph Tree{\n\n");
     fprintf(graphViz, "\trankdir=UD;\n\n");
@@ -132,7 +140,14 @@ TreeErrorCode TreeCtor(Tree_t *tree)
     return treeError;
 }
 
-static void NodeDtor(Node_t *node)
+void NodeDtor(Node_t *node)
+{
+    assert(node != nullptr);
+
+    free(node);
+}
+
+void SubtreeDtor(Node_t *node)
 {
     assert(node != nullptr);
 
@@ -141,8 +156,8 @@ static void NodeDtor(Node_t *node)
 
     free(node);
 
-    if (leftChild  != nullptr) NodeDtor(leftChild);
-    if (rightChild != nullptr) NodeDtor(rightChild);
+    if (leftChild  != nullptr) SubtreeDtor(leftChild);
+    if (rightChild != nullptr) SubtreeDtor(rightChild);
 }
 
 TreeErrorCode TreeDtor(Tree_t *tree)
@@ -154,7 +169,7 @@ TreeErrorCode TreeDtor(Tree_t *tree)
         return TREE_DESTRUCTED_ERROR;
     }
 
-    NodeDtor(tree->root);
+    SubtreeDtor(tree->root);
     tree->size = 0;
     tree->size = TREE_DESTRUCTED;
 
@@ -204,15 +219,13 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, const NodeChild child, TreeErrorC
     return newNode;
 }
 
-static char* TreeReadData()
+static char* TreeReadData(FILE *finput)
 {
-    FILE *finput = fopen(INPUT_FILE_NAME, "r");
+    assert(finput != nullptr);
 
     int numberBytesFile = GetFileSize(finput);
     char *str = (char*)calloc(numberBytesFile, sizeof(char));
     str = (char*)ReadFile(finput, str, numberBytesFile);
-
-    fclose(finput);
 
     return str;
 }
@@ -265,7 +278,7 @@ static NodeType DefineNodeType(const char *str)
     }
     else if (STRCOMPARE_("^"))
     {
-        return DEGREE;
+        return POW;
     }
     else
     {
@@ -349,11 +362,12 @@ static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *tre
     return str;
 }
 
-TreeErrorCode TreeBuild(Tree_t *tree)
+TreeErrorCode TreeBuild(Tree_t *tree, FILE *finput)
 {
-    assert(tree != nullptr);
+    assert(tree   != nullptr);
+    assert(finput != nullptr);
 
-    char *str = TreeReadData();
+    char *str = TreeReadData(finput);
     if (str == nullptr)
     {
         return TREE_FILL_ERROR;
@@ -434,7 +448,7 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput)
             NodeSaveInFile(node->rightChild, foutput);
             fprintf(foutput, "}");
         }
-        else if (node->nodeType == DEGREE)
+        else if (node->nodeType == POW)
         {
             NodeSaveInFile(node->leftChild, foutput);
             fprintf(foutput, "%c", node->nodeType);
@@ -466,4 +480,24 @@ TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data, const char *str)
     fprintf(data, "\n\n");
 
     return TREE_NO_ERROR;
+}
+
+int SubtreeCompare(const Node_t *node1, const Node_t *node2)
+{
+    assert(node1 != nullptr);
+    assert(node2 != nullptr);
+
+    if (node1->nodeType != node2->nodeType || node1->value != node2->value)
+    {
+        return NOT_EQUAL;
+    }
+    else
+    {
+        if ((node1->leftChild != nullptr && node2->leftChild != nullptr) && (node1->rightChild != nullptr && node2->rightChild != nullptr))
+            return SubtreeCompare(node1->leftChild, node2->leftChild) * SubtreeCompare(node1->rightChild, node2->rightChild);
+        else if ((node1->leftChild == nullptr && node2->leftChild == nullptr) && (node1->rightChild == nullptr && node2->rightChild == nullptr))
+            return EQUAL;
+        else
+            return NOT_EQUAL;
+    }
 }

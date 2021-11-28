@@ -1,19 +1,25 @@
 #include "DiffOperations.h"
+#include "SimplifyingExpression.h"
+
+#define ASSERT_(tree, node)      \
+    do                           \
+    {                            \
+        assert(tree != nullptr); \
+        assert(node != nullptr); \
+    } while(0)
 
 const double NODE_NO_VALUE = -1.0;
 
 void DiffConst(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     SetNodeType(node, CONST, 0.0);
 }
 
 void DiffVariable(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     SetNodeType(node, CONST, 1.0);
 }
@@ -40,13 +46,6 @@ static void TreeCopy(Tree_t *tree, Node_t *node1, const Node_t *node2)
     }
 }
 
-static void NodeDtor(Node_t *node)
-{
-    assert(node != nullptr);
-
-    free(node);
-}
-
 static NodeChild GetNodeBranch(Node_t *node)
 {
     assert(node != nullptr);
@@ -56,8 +55,7 @@ static NodeChild GetNodeBranch(Node_t *node)
 
 static Node_t* BuildNewNodeForUnaryOperation(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
     Node_t *newNode = nullptr;
@@ -80,21 +78,21 @@ static Node_t* BuildNewNodeForUnaryOperation(Tree_t *tree, Node_t *node)
         tree->size = tree->size + 1;
     }
 
+    SetNodeType(newNode, MUL, NODE_NO_VALUE);
+
+    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
+    TreeCopy(tree, newNode->rightChild, node->leftChild);
+
     return newNode;
 }
 
 Node_t* DiffUnaryOperationSin(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
 
     Node_t *newNode = BuildNewNodeForUnaryOperation(tree, node);
-    SetNodeType(newNode, MUL, NODE_NO_VALUE);
-
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
-    TreeCopy(tree, newNode->rightChild, node->leftChild);
 
     newNode->leftChild = node;
     node->parent = newNode;
@@ -105,19 +103,14 @@ Node_t* DiffUnaryOperationSin(Tree_t *tree, Node_t *node)
 
 Node_t* DiffUnaryOperationCos(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
 
     Node_t *newNode = BuildNewNodeForUnaryOperation(tree, node);
-    SetNodeType(newNode, MUL, NODE_NO_VALUE);
-
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
-    TreeCopy(tree, newNode->rightChild, node->leftChild);
 
     Node_t *newNode1 = TreeInsert(tree, newNode, LEFT_CHILD, &treeError);
-    SetNodeType(newNode1, MUL, NODE_NO_VALUE );
+    SetNodeType(newNode1, MUL, NODE_NO_VALUE);
 
     newNode1->leftChild = node;
     node->parent = newNode1;
@@ -131,16 +124,11 @@ Node_t* DiffUnaryOperationCos(Tree_t *tree, Node_t *node)
 
 Node_t* DiffUnaryOperationLn(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
 
     Node_t *newNode = BuildNewNodeForUnaryOperation(tree, node);
-    SetNodeType(newNode, MUL, NODE_NO_VALUE);
-
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
-    TreeCopy(tree, newNode->rightChild, node->leftChild);
 
     Node_t *newNode1 = TreeInsert(tree, newNode, LEFT_CHILD, &treeError);
     SetNodeType(newNode1, DIV, NODE_NO_VALUE);
@@ -183,8 +171,7 @@ Node_t* DiffUnaryOperationLn(Tree_t *tree, Node_t *node)
 
 Node_t *DiffBinaryOperationMul(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
     Node_t *leftChild  = node->leftChild ;
@@ -201,8 +188,7 @@ Node_t *DiffBinaryOperationMul(Tree_t *tree, Node_t *node)
 
 Node_t *DiffBinaryOperationDiv(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
     Node_t *leftChild  = node->leftChild ;
@@ -226,10 +212,9 @@ Node_t *DiffBinaryOperationDiv(Tree_t *tree, Node_t *node)
     return node;
 }
 
-Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node)
+Node_t *DiffBinaryOperationPow(Tree_t *tree, Node_t *node)
 {
-    assert(tree != nullptr);
-    assert(node != nullptr);
+    ASSERT_(tree, node);
 
     TreeErrorCode treeError = TREE_NO_ERROR;
     Node_t *leftChild  = node->leftChild ;
@@ -244,7 +229,7 @@ Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node)
     SetNodeType(newNode, MUL, NODE_NO_VALUE);
 
     Node_t *newNode1 = TreeInsert(tree, newNode, LEFT_CHILD, &treeError);
-    SetNodeType(newNode1, DEGREE, NODE_NO_VALUE);
+    SetNodeType(newNode1, POW, NODE_NO_VALUE);
 
     COPY_NODE_BRANCH_(newNode1, leftChild, leftChild);
 
@@ -263,4 +248,56 @@ Node_t *DiffBinaryOperationDegree(Tree_t *tree, Node_t *node)
     NodeDtor(rightChild);
 
     return node;
+}
+
+void DiffExpression(Tree_t *tree, Node_t *node)
+{
+    ASSERT_(tree, node);
+
+    switch ((int)node->nodeType)
+    {
+        case CONST:    { DIFF_CONST_()     ; }
+        case VARIABLE: { DIFF_VARIABLE_()  ; }
+        case SIN:      { DIFF_SIN_()       ; }
+        case COS:      { DIFF_COS_()       ; }
+        case LN :      { DIFF_LN_()        ; }
+        case ADD:
+        case SUB:      { DIFF_ADD_OR_SUB_(); }
+        case MUL:      { DIFF_MUL_()       ; }
+        case DIV:      { DIFF_DIV_()       ; }
+        case POW:      { DIFF_POW_()       ; }
+        default:
+        {
+            printf("Error - invalid nodeType!\n");
+            break;
+        }
+    }
+
+    return;
+}
+
+#undef ASSERT_
+
+void Differentiate(Tree_t *tree, FILE *foutput)
+{
+    assert(tree    != nullptr);
+    assert(foutput != nullptr);
+
+    TreeSaveInFile(tree, foutput, "1. Выражение для дифференцирования:\n\n");
+
+    SimplifyExpression(tree);
+
+    TreeSaveInFile(tree, foutput, "2. Первоначальная обработка выражения:\n\n");
+
+    DiffExpression(tree, tree->root);
+
+    TreeSaveInFile(tree, foutput, "3. Выражение после дифференцирования:\n\n");
+
+    SimplifyExpression(tree);
+
+    TreeSaveInFile(tree, foutput, "4. Упрощенное выражение после дифференцирования:\n\n");
+
+    fprintf(foutput, "\\end{document}");
+
+    TreeDump(tree);
 }
