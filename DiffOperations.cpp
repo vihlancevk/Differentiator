@@ -241,10 +241,9 @@ Node_t *DiffBinaryOperationPow(Tree_t *tree, Node_t *node)
     TreeInsert(tree, newNode2, RIGHT_CHILD, &treeError);
     SetNodeType(newNode2->rightChild, CONST, 1.0);
 
-    TreeInsert(tree, newNode, RIGHT_CHILD, &treeError);
-    newNode->rightChild = leftChild;
-    leftChild->parent = newNode;
+    COPY_NODE_BRANCH_(newNode, rightChild, leftChild);
 
+    NodeDtor(leftChild) ;
     NodeDtor(rightChild);
 
     return node;
