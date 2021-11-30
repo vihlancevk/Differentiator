@@ -48,8 +48,8 @@ Node_t *DiffBinaryOperationDiv(Tree_t *tree, Node_t *node);
     break
 
 Node_t *DiffBinaryOperationPow(Tree_t *tree, Node_t *node);
-#define DIFF_POW_()                                  \
-    DiffBinaryOperationPow(tree, node);              \
+#define DIFF_POW_()                                     \
+    DiffBinaryOperationPow(tree, node);                 \
     DiffExpression(tree, node->rightChild->rightChild); \
     break
 

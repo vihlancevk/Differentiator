@@ -7,7 +7,7 @@ const size_t STR_MAX_SIZE = 120;
 const size_t NodeView_STR_MAX_SIZE = 20;
 const int NOT_EQUAL = 0;
 const int EQUAL = 1;
-const char *TREE_GRAPHVIZ   = "graphviz.gv";
+const char *TREE_GRAPHVIZ = "graphviz.gv";
 
 struct NodeView
 {
@@ -288,7 +288,7 @@ static NodeType DefineNodeType(const char *str)
     #undef STRCOMPARE_
 }
 
-void SetNodeType(Node_t *node, const NodeType nodeType, const double value)
+void SetNodeTypeAndValue(Node_t *node, const NodeType nodeType, const double value)
 {
     assert(node != nullptr);
 

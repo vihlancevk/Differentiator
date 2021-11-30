@@ -3,13 +3,13 @@
 
 int status = 0;
 
-#define OPERATION_WITH_NODE_(operation)                                                 \
-    SetNodeType(node, CONST, node->leftChild->value operation node->rightChild->value); \
-    NodeDtor(node->leftChild );                                                         \
-    NodeDtor(node->rightChild);                                                         \
-    node->leftChild  = nullptr;                                                         \
-    node->rightChild = nullptr;                                                         \
-    status = status + 1;                                                                \
+#define OPERATION_WITH_NODE_(operation)                                                         \
+    SetNodeTypeAndValue(node, CONST, node->leftChild->value operation node->rightChild->value); \
+    NodeDtor(node->leftChild );                                                                 \
+    NodeDtor(node->rightChild);                                                                 \
+    node->leftChild  = nullptr;                                                                 \
+    node->rightChild = nullptr;                                                                 \
+    status = status + 1;                                                                        \
     break
 
 static void SimplifyConst(Node_t *node)
@@ -57,7 +57,7 @@ static void SimplifyAddAndSub(Tree_t *tree, Node_t *node, stack_t *stack)
         node->leftChild = nullptr;
         SubtreeDtor(node->rightChild);
         node->rightChild = nullptr;
-        SetNodeType(node, CONST, 0.0);
+        SetNodeTypeAndValue(node, CONST, 0.0);
         status = status + 1;
     }
     else if (node->leftChild->value == 0.0)
@@ -86,13 +86,13 @@ static void SimplifyMul(Tree_t *tree, Node_t *node, stack_t *stack)
         {
             node->parent->leftChild = nullptr;
             TreeInsert(tree, node->parent, LEFT_CHILD, &treeError);
-            SetNodeType(node->parent->leftChild, CONST, 0.0);
+            SetNodeTypeAndValue(node->parent->leftChild, CONST, 0.0);
         }
         else
         {
             node->parent->rightChild = nullptr;
             TreeInsert(tree, node->parent, RIGHT_CHILD, &treeError);
-            SetNodeType(node->parent->rightChild, CONST, 0.0);
+            SetNodeTypeAndValue(node->parent->rightChild, CONST, 0.0);
         }
         SubtreeDtor(node);
         status = status + 1;
@@ -123,7 +123,7 @@ static void SimplifyDiv(Tree_t *tree, Node_t *node, stack_t *stack)
         node->leftChild = nullptr;
         SubtreeDtor(node->rightChild);
         node->rightChild = nullptr;
-        SetNodeType(node, CONST, 1.0);
+        SetNodeTypeAndValue(node, CONST, 1.0);
         status = status + 1;
     }
     else if (node->leftChild->value == 0.0)
@@ -138,7 +138,7 @@ static void SimplifyDiv(Tree_t *tree, Node_t *node, stack_t *stack)
             node->parent->rightChild = nullptr;
             TreeInsert(tree, node->parent, RIGHT_CHILD, &treeError);
         }
-        SetNodeType(node->parent->rightChild, CONST, 0.0);
+        SetNodeTypeAndValue(node->parent->rightChild, CONST, 0.0);
         SubtreeDtor(node);
         status = status + 1;
     }
@@ -162,7 +162,7 @@ static void SimplifyPow(Tree_t *tree, Node_t *node, stack_t *stack)
         node->leftChild = nullptr;
         NodeDtor(node->rightChild);
         node->rightChild = nullptr;
-        SetNodeType(node, CONST, 1.0);
+        SetNodeTypeAndValue(node, CONST, 1.0);
         status = status + 1;
     }
     else if (node->rightChild->value == 1.0)
@@ -195,7 +195,7 @@ static void SimplifyLn(Tree_t *tree, Node_t *node, stack_t *stack)
     {
         SubtreeDtor(node->leftChild);
         node->leftChild = nullptr;
-        SetNodeType(node, CONST, 0.0);
+        SetNodeTypeAndValue(node, CONST, 0.0);
         status = status + 1;
     }
 }
@@ -221,7 +221,7 @@ static void CheckNode(Tree_t *tree, Node_t *node, stack_t *stack)
         case SUB   : { ; SimplifyAddAndSub(tree, node, stack); break ; }
         case MUL   : { ; SimplifyMul(tree, node, stack)      ; break ; }
         case DIV   : { ; SimplifyDiv(tree, node, stack)      ; break ; }
-        case POW   : { ; SimplifyPow(tree, node, stack)   ; break ; }
+        case POW   : { ; SimplifyPow(tree, node, stack)      ; break ; }
         case LN    : { ; SimplifyLn(tree, node, stack)       ; break ; }
         default    : { ;                                     ; break ; }
     }

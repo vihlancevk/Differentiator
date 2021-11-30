@@ -76,7 +76,7 @@ void SubtreeDtor(Node_t *node);
 
 TreeErrorCode TreeDtor(Tree_t *tree);
 
-void SetNodeType(Node_t *node, const NodeType nodeType,  const double value);
+void SetNodeTypeAndValue(Node_t *node, const NodeType nodeType,  const double value);
 
 TreeErrorCode TreeBuild(Tree_t *tree, FILE *finput);
 
