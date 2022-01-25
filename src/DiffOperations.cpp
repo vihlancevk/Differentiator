@@ -1,5 +1,5 @@
-#include "DiffOperations.h"
-#include "SimplifyingExpression.h"
+#include "../libs/DiffOperations.h"
+#include "../libs/SimplifyingExpression.h"
 
 const double NODE_NO_VALUE = -1.0;
 

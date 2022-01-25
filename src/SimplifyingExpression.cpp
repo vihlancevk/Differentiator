@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "SimplifyingExpression.h"
+#include "../libs/SimplifyingExpression.h"
 
 int status = 0;
 

@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <typeinfo>
 #include <cxxabi.h>
-#include "Stack.h"
+#include "../libs/Stack.h"
 
 #define DEBUG
 #undef DEBUG
@@ -18,7 +18,7 @@
 
 const size_t STACK_MEMORY_EXPAND = 2;
 const size_t STACK_MEMORY_SHRINK = 3;
-const char *NAME_LOG_FILE = "log.txt";
+const char *NAME_LOG_FILE = "../res/log.txt";
 const void *const ERR_PTR = (void*)(1000-7);
 const void *const ERR_CALLOC_PTR = (void*)(300);
 const void *const ERR_REALLOC_PTR = (void*)(666);

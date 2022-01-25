@@ -1,8 +1,8 @@
-#include "Tree.h"
-#include "DiffOperations.h"
+#include "../libs/Tree.h"
+#include "../libs/DiffOperations.h"
 
-const char *INPUT_FILE_NAME  = "data.txt";
-const char *OUTPUT_FILE_NAME = "data.tex";
+const char *INPUT_FILE_NAME  = "../res/data.txt";
+const char *OUTPUT_FILE_NAME = "../res/data.tex";
 
 int main()
 {
