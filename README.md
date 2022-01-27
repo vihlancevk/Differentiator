@@ -1,7 +1,7 @@
 # Differentiator
 The program differentiates expressions from one variable (x).  
-You need to enter in the file data.txt the expression that needs to be differentiated in the full bracket notation:  
-((3)/(x))+(ln(x))  
+You need to enter in the file data.txt the expression (at the end of the expression entry, it is necessary to put the $ symbol, this is done for the convenience of the recursive descent algorithm):  
+3/x + ln(x)$  
 The program supports the following operations:  
 ( + ) - add;  
 ( - ) - sub;  
@@ -11,3 +11,4 @@ The program supports the following operations:
 sin()  
 cos()  
 ln()  
+Next, the program will generate a data.pdf file, which will contain all the information on the differentiable expression.  
