@@ -1,5 +1,6 @@
 #include "../libs/Tree.h"
 #include "../libs/FileOperations.h"
+#include "../libs/Parser.h"
 
 #define DEBUG
 
@@ -184,16 +185,16 @@ Node_t* TreeInsert(Tree_t *tree, Node_t *node, const NodeChild child, TreeErrorC
 
     *treeError = TREE_NO_ERROR;
     Node_t *newNode = nullptr;
-    #define TREE_INSERT_(branch)                                            \
-        do                                                                  \
-        {                                                                   \
-        node->branch = (Node_t*)calloc(1, sizeof(Node_t));                  \
-        if (node->branch == nullptr)                                        \
-        {                                                                   \
-            *treeError = TREE_INSERT_ERROR;                                 \
-        }                                                                   \
-        node->branch->parent = node;                                        \
-        newNode = node->branch;                                             \
+    #define TREE_INSERT_(branch)                                                \
+        do                                                                      \
+        {                                                                       \
+            node->branch = (Node_t*)calloc(1, sizeof(Node_t));                  \
+            if (node->branch == nullptr)                                        \
+            {                                                                   \
+                *treeError = TREE_INSERT_ERROR;                                 \
+            }                                                                   \
+            node->branch->parent = node;                                        \
+            newNode = node->branch;                                             \
         } while(0)
 
     if (child == LEFT_CHILD)
@@ -237,57 +238,6 @@ static char* StrBufferFindEndStr(char *str)
     return strchr(str, ')');
 }
 
-static NodeType DefineNodeType(const char *str)
-{
-    assert(str != nullptr);
-
-    #define STRCOMPARE_(thisStr) \
-        strcmp(str, thisStr) == 0
-
-    if (STRCOMPARE_("x"))
-    {
-        return VARIABLE;
-    }
-    else if (STRCOMPARE_("sin"))
-    {
-        return SIN;
-    }
-    else if (STRCOMPARE_("cos"))
-    {
-        return COS;
-    }
-    else if (STRCOMPARE_("ln"))
-    {
-        return LN;
-    }
-    else if (STRCOMPARE_("+"))
-    {
-        return ADD;
-    }
-    else if (STRCOMPARE_("-"))
-    {
-        return SUB;
-    }
-    else if (STRCOMPARE_("*"))
-    {
-        return MUL;
-    }
-    else if (STRCOMPARE_("/"))
-    {
-        return DIV;
-    }
-    else if (STRCOMPARE_("^"))
-    {
-        return POW;
-    }
-    else
-    {
-        return CONST;
-    }
-
-    #undef STRCOMPARE_
-}
-
 void SetNodeTypeAndValue(Node_t *node, const NodeType nodeType, const double value)
 {
     assert(node != nullptr);
@@ -296,70 +246,26 @@ void SetNodeTypeAndValue(Node_t *node, const NodeType nodeType, const double val
     node->value    = value;
 }
 
-static char* NodeBuild(Tree_t *tree, Node_t *node, char *str, TreeErrorCode *treeError, const NodeChild child)
+void TreeCopy(Tree_t *tree, Node_t *node1, const Node_t *node2)
 {
-    assert(tree      != nullptr);
-    assert(node      != nullptr);
-    assert(str       != nullptr);
-    assert(treeError != nullptr);
+    assert(tree  != nullptr);
+    assert(node1 != nullptr);
+    assert(node2 != nullptr);
 
-    char mathOperation[3] = {};
+    TreeErrorCode treeError = TREE_NO_ERROR;
 
-    if (*str == '(' && *(str + 1) == '(')
+    SetNodeTypeAndValue(node1, node2->nodeType, node2->value);
+
+    if (node2->leftChild  != nullptr)
     {
-        Node_t *newNode = TreeInsert(tree, node, child, treeError);
-
-        str = str + 1;
-        str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
-
-        strncpy(mathOperation, str, 1);
-        newNode->nodeType = DefineNodeType(mathOperation);
-        newNode->value = -1.0;
-
-        str = str + 1;
-        str = NodeBuild(tree, newNode, str, treeError, RIGHT_CHILD);
+        TreeInsert(tree, node1, LEFT_CHILD, &treeError);
+        TreeCopy(tree, node1->leftChild,  node2->leftChild );
     }
-    else
+    if (node2->rightChild != nullptr)
     {
-        str = str + 1;
-        Node_t *newNode = TreeInsert(tree, node, child, treeError);
-        if (strncmp(str, "sin", 3) == 0 || strncmp(str, "cos", 3) == 0)
-        {
-            strncpy(mathOperation, str, 3);
-            str = str + 3;
-            str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
-        }
-        else if (strncmp(str, "ln", 2) == 0)
-        {
-            strncpy(mathOperation, str, 2);
-            str = str + 2;
-            str = NodeBuild(tree, newNode, str, treeError, LEFT_CHILD);
-        }
-        else
-        {
-            char *endStr = StrBufferFindEndStr(str);
-            *endStr = '\0';
-            strcpy(mathOperation, str);
-            str = endStr + 1;
-        }
-
-        newNode->nodeType = DefineNodeType(mathOperation);
-        if (newNode->nodeType == CONST)
-        {
-            newNode->value = atof(mathOperation);
-        }
-        else
-        {
-            newNode->value = -1.0;
-        }
-
-        while (*str == ')')
-        {
-            str = str + 1;
-        }
+        TreeInsert(tree, node1, RIGHT_CHILD, &treeError);
+        TreeCopy(tree, node1->rightChild, node2->rightChild);
     }
-
-    return str;
 }
 
 TreeErrorCode TreeBuild(Tree_t *tree, FILE *finput)
@@ -373,13 +279,19 @@ TreeErrorCode TreeBuild(Tree_t *tree, FILE *finput)
         return TREE_FILL_ERROR;
     }
 
-    char *strCopy = str;
     TreeErrorCode treeError = TREE_NO_ERROR;
+    ParserErrorCode parserError = PARSER_NO_ERROR;
+    Parser parser = {str, 0, parserError};
 
-    NodeBuild(tree, tree->root, strCopy, &treeError, LEFT_CHILD);
+    Node_t *node = ParserExpression(&parser);
+    Node_t *newNode = TreeInsert(tree, tree->root, LEFT_CHILD, &treeError);
+    if (node != nullptr) { TreeCopy(tree, newNode, node); }
+    else                 { printf("Enter the expression!\n"); }
 
+    free(node);
     free(str);
-    return treeError;
+
+    return TREE_NO_ERROR;
 }
 
 static void NodeSaveInFile(Node_t *node, FILE *foutput)
@@ -458,11 +370,9 @@ static void NodeSaveInFile(Node_t *node, FILE *foutput)
         }
         else
         {
-            fprintf(foutput, "(");
             NodeSaveInFile(node->leftChild, foutput);
             fprintf(foutput, "%c", node->nodeType);
             NodeSaveInFile(node->rightChild, foutput);
-            fprintf(foutput, ")");
         }
     }
 }
@@ -473,11 +383,10 @@ TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data, const char *str)
     assert(data != nullptr);
     assert(str  != nullptr);
 
-    fprintf(data, "%s", str);
-    fprintf(data, "\\[");
+    fprintf(data, "\t\t%s\\\\*\n", str);
+    fprintf(data, "\t\t\\indent $ ");
     NodeSaveInFile(tree->root, data);
-    fprintf(data, "\\]");
-    fprintf(data, "\n\n");
+    fprintf(data, " $\\\\*\n");
 
     return TREE_NO_ERROR;
 }

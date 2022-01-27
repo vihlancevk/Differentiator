@@ -80,6 +80,8 @@ void SetNodeTypeAndValue(Node_t *node, const NodeType nodeType,  const double va
 
 TreeErrorCode TreeBuild(Tree_t *tree, FILE *finput);
 
+void TreeCopy(Tree_t *tree, Node_t *node1, const Node_t *node2);
+
 TreeErrorCode TreeSaveInFile(Tree_t *tree, FILE* data, const char *str);
 
 int SubtreeCompare(const Node_t *node1, const Node_t *node2);

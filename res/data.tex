@@ -1,95 +1,38 @@
+\documentclass[a4paper, 12pt]{minimal}
 
-\documentclass[a4paper,12pt]{article} % добавить leqno в [] для нумерации слева
-\usepackage[a4paper,top=1.3cm,bottom=2cm,left=1.5cm,right=1.5cm,marginparwidth=0.75cm]{geometry}
-%%% Работа с русским языком
-\usepackage{cmap}					% поиск в PDF
-\usepackage{mathtext} 				% русские буквы в фомулах
-\usepackage[T2A]{fontenc}			% кодировка
-\usepackage[utf8]{inputenc}			% кодировка исходного текста
-\usepackage[english,russian]{babel}	% локализация и переносы
-\usepackage[16pt]{extsizes}
 
-\usepackage{graphicx}
+%  Русификация
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
 
-\usepackage{wrapfig}
-\usepackage{tabularx}
 
-\usepackage{hyperref}
-\usepackage[rgb]{xcolor}
-\hypersetup{
-colorlinks=true,urlcolor=blue
-}
+% Греческий
+\usepackage{textgreek}
 
-%%% Дополнительная работа с математикой
-\usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools} % AMS
-\usepackage{icomma} % "Умная" запятая: $0,2$ --- число, $0, 2$ --- перечисление
+% Математическая символика
+\usepackage{mathtools}
 
-%% Номера формул
-\mathtoolsset{showonlyrefs=true} % Показывать номера только у тех формул, на которые есть \eqref{} в тексте.
+\usepackage{vmargin}
+\setpapersize{A4}
 
-%% Шрифты
-\usepackage{euscript}	 % Шрифт Евклид
-\usepackage{mathrsfs} % Красивый матшрифт
+% Поля страницы
+\setmarginsrb{1cm}{1cm}{1cm}{1cm}{0pt}{0mm}{0pt}{0mm}
 
-%% Свои команды
-\DeclareMathOperator{\sgn}{\mathop{sgn}}
+\sloppy
 
-%% Перенос знаков в формулах (по Львовскому)
-\newcommand*{\hm}[1]{#1\nobreak\discretionary{}
-{\hbox{$\mathsurround=0pt #1$}}{}}
-
-%%% Заголовок
-\author{Вихлянцев Константин Игоревич}
-\title{Лабораторная работа №1.1.1
-
-Дифференцирование.
-}
-\date{\today}
+% Нумерация страница вкл.
+\pagestyle{plain}
 
 \begin{document}
-
-\begin{titlepage}
-	\begin{center}
-		{\large МОСКОВСКИЙ ФИЗИКО-ТЕХНИЧЕСКИЙ ИНСТИТУТ (НАЦИОНАЛЬНЫЙ ИССЛЕДОВАТЕЛЬСКИЙ УНИВЕРСИТЕТ)}
-	\end{center}
-	\begin{center}
-		{\large Физтех-школа кибернетики и радиотехники}
-	\end{center}
-	
-	
-	\vspace{1cm}
-	{\huge
-		\begin{center}
-			{\bf Отчёт о выполнении лабораторной работы по матану 1.1.1}\\
-			Дифференцирование.
-		\end{center}
+	{
+		\noindent
+		1. Выражение для дифференцирования:\\*
+		\indent $ \frac{x^{5}}{\sin{(x)}} $\\*
+		2. Первоначальная обработка выражения:\\*
+		\indent $ \frac{x^{5}}{\sin{(x)}} $\\*
+		3. Выражение после дифференцирования:\\*
+		\indent $ \frac{{{5}\cdot{{x^{5-1}}\cdot{1}}}\cdot{\sin{(x)}}-{x^{5}}\cdot{{\cos{(x)}}\cdot{1}}}{{\sin{(x)}}\cdot{\sin{(x)}}} $\\*
+		4. Упрощенное выражение после дифференцирования:\\*
+		\indent $ \frac{{{5}\cdot{x^{4}}}\cdot{\sin{(x)}}-{x^{5}}\cdot{\cos{(x)}}}{{\sin{(x)}}\cdot{\sin{(x)}}} $\\*
 	}
-	\vspace{1cm}
-	\begin{flushright}
-		{\LARGE Автор:\\ Вихлянцев Константин Игоревич \\
-			\vspace{0.2cm}
-			Б01-103}
-	\end{flushright}
-	\vspace{1cm}
-	\begin{center}
-		Долгопрудный 2021
-	\end{center}
-\end{titlepage}
-
-1. Выражение для дифференцирования:
-
-\[x^{2}\]
-
-2. Первоначальная обработка выражения:
-
-\[x^{2}\]
-
-3. Выражение после дифференцирования:
-
-\[{2}\cdot{{x^{(2-1)}}\cdot{1}}\]
-
-4. Упрощенное выражение после дифференцирования:
-
-\[{2}\cdot{x}\]
-
 \end{document}

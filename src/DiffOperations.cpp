@@ -19,28 +19,6 @@ void DiffVariable(Tree_t *tree, Node_t *node)
     SetNodeTypeAndValue(node, CONST, 1.0);
 }
 
-static void TreeCopy(Tree_t *tree, Node_t *node1, const Node_t *node2)
-{
-    assert(tree  != nullptr);
-    assert(node1 != nullptr);
-    assert(node2 != nullptr);
-
-    TreeErrorCode treeError = TREE_NO_ERROR;
-
-    SetNodeTypeAndValue(node1, node2->nodeType, node2->value);
-
-    if (node2->leftChild  != nullptr)
-    {
-        TreeInsert(tree, node1, LEFT_CHILD, &treeError);
-        TreeCopy(tree, node1->leftChild,  node2->leftChild );
-    }
-    if (node2->rightChild != nullptr)
-    {
-        TreeInsert(tree, node1, RIGHT_CHILD, &treeError);
-        TreeCopy(tree, node1->rightChild, node2->rightChild);
-    }
-}
-
 static NodeChild GetNodeBranch(Node_t *node)
 {
     assert(node != nullptr);
@@ -283,21 +261,21 @@ void Differentiate(Tree_t *tree, FILE *foutput)
     assert(tree    != nullptr);
     assert(foutput != nullptr);
 
-    TreeSaveInFile(tree, foutput, "1. Выражение для дифференцирования:\n\n");
+    TreeSaveInFile(tree, foutput, "1. Выражение для дифференцирования:");
 
     SimplifyExpression(tree);
 
-    TreeSaveInFile(tree, foutput, "2. Первоначальная обработка выражения:\n\n");
+    TreeSaveInFile(tree, foutput, "2. Первоначальная обработка выражения:");
 
     DiffExpression(tree, tree->root);
 
-    TreeSaveInFile(tree, foutput, "3. Выражение после дифференцирования:\n\n");
+    TreeSaveInFile(tree, foutput, "3. Выражение после дифференцирования:");
 
     SimplifyExpression(tree);
 
-    TreeSaveInFile(tree, foutput, "4. Упрощенное выражение после дифференцирования:\n\n");
+    TreeSaveInFile(tree, foutput, "4. Упрощенное выражение после дифференцирования:");
 
-    fprintf(foutput, "\\end{document}");
+    fprintf(foutput, "\t}\n\\end{document}");
 
     TreeDump(tree);
 }
