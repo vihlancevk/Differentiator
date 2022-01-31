@@ -1,4 +1,4 @@
-#include "../libs/FileOperations.h"
+#include "../include/FileOperations.h"
 
 int GetFileSize(FILE *finput)
 {

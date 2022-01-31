@@ -1,5 +1,5 @@
-#include "../libs/Tree.h"
-#include "../libs/DiffOperations.h"
+#include "../include/Tree.h"
+#include "../include/DiffOperations.h"
 
 const char *INPUT_FILE_NAME  = "../res/data.txt";
 const char *OUTPUT_FILE_NAME = "../res/data.tex";

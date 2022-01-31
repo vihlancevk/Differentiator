@@ -1,6 +1,6 @@
-#include "../libs/Tree.h"
-#include "../libs/FileOperations.h"
-#include "../libs/Parser.h"
+#include "../include/Tree.h"
+#include "../include/FileOperations.h"
+#include "../include/Parser.h"
 
 #define DEBUG
 
